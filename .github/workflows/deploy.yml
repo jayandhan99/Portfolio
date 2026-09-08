@@ -31,7 +31,9 @@ jobs:
         run: npx --yes html-validate "**/*.html"
 
       - name: CSS lint
-        run: npx --yes -p stylelint -p stylelint-config-standard stylelint "assets/css/**/*.css"
+        run: |
+          npm install --no-save stylelint stylelint-config-standard
+          npx stylelint "assets/css/**/*.css"
 
       - name: Broken link check
         run: npx --yes linkinator . --recurse --silent --skip "https://fonts.googleapis.com,https://fonts.gstatic.com"
