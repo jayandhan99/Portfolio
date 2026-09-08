@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing Strategy &amp; Customer Ordering Behavior — Portfolio</title>
+  <meta name="description" content="Using regression and classification to optimize restaurant pricing and understand online ordering behavior.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/project.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-brand">JSM</a>
+      <a href="../index.html#projects" class="back-link">&larr; All Projects</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="project-hero">
+      <div class="section-inner">
+        <h1 class="project-title">Pricing Strategy &amp; Customer Ordering Behavior Analysis</h1>
+        <p class="project-context">Personal Project</p>
+        <div class="project-tags">
+          <span class="pill">Analytics</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="project-content">
+      <div class="section-inner">
+        <article class="project-section">
+          <h2>Dataset Understanding</h2>
+          <p>
+            In the evolving restaurant industry, data-driven decision-making is crucial for both new and
+            established businesses. This project uses real-world restaurant data to solve two core
+            problems using machine learning:
+          </p>
+          <ul>
+            <li>Predicting the cost for two people based on restaurant characteristics.</li>
+            <li>Classifying whether an order is placed online or offline.</li>
+          </ul>
+          <p>
+            These insights help restaurants optimize their pricing strategies and digital operations,
+            while giving platforms like Zomato valuable tools to support their partners. Using a mix of
+            regression and classification models, the project delivers actionable business recommendations
+            powered by interpretable machine learning.
+          </p>
+
+          <h3>Data Preprocessing</h3>
+          <p>
+            The raw dataset initially contained several formatting issues, including missing values,
+            categorical strings, and unnecessary columns. Label encoding was applied to handle categorical
+            variables, missing cost and rating data were filled using median imputation, and feature
+            scaling was performed. These preprocessing steps cleaned and prepared the dataset for
+            regression modeling.
+          </p>
+
+          <h3>Exploratory Data Analysis</h3>
+          <p>
+            The distribution of the target variable &mdash; cost for two people &mdash; showed a clear
+            right skew, with a few restaurants being significantly more expensive. Irrelevant fields were
+            removed, categorical variables were label-encoded, and numerical features were scaled using
+            StandardScaler. To assess feature significance, t-tests were performed, revealing strong
+            correlations between cost and features such as location, rating, and restaurant type.
+          </p>
+
+          <h3>Modeling</h3>
+          <p>
+            Initial modeling began with simple linear regression, which exhibited clear underfitting. The
+            relationship between features such as restaurant type and price was found to be non-linear,
+            prompting a shift to tree-based models. Among these, Random Forest performed best out of the
+            box, achieving a test R&sup2; score of 0.96.
+          </p>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/pricing_strategy/without-tuning.jpg" alt="Table of regression model RMSE and R-squared scores before hyperparameter tuning">
+            <figcaption>Model Performance &mdash; Before Tuning</figcaption>
+          </figure>
+          <p>
+            RandomizedSearchCV was employed to tune the Random Forest model and address overfitting.
+            Interestingly, the untuned model produced a lower test RMSE but showed signs of overfitting due
+            to an extremely low training error. After tuning, the model became more generalizable and
+            balanced, albeit with a slightly higher RMSE. This demonstrated that hyperparameter tuning is
+            not solely focused on maximizing accuracy, but rather on enhancing model consistency and
+            fairness on unseen data.
+          </p>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/pricing_strategy/with-tuning.png" alt="Table of regression model RMSE and R-squared scores after hyperparameter tuning">
+            <figcaption>Model Performance &mdash; After Tuning</figcaption>
+          </figure>
+
+          <h3>Insights &amp; Feature Interpretation</h3>
+          <p>
+            To interpret the model, feature importances from a decision tree were analyzed. The most
+            influential predictors of cost were found to be book_table and rest_type, which aligns with
+            expectations, as premium restaurants often require reservations. In contrast, online_order
+            showed minimal impact on pricing decisions.
+          </p>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/pricing_strategy/regression-feature.png" alt="Random Forest feature importance chart for predicting restaurant cost">
+            <figcaption>Regression Feature Importance</figcaption>
+          </figure>
+          <ul>
+            <li>Table booking availability and restaurant type are the strongest predictors of cost &mdash; these are operational choices owners can control.</li>
+            <li>Customer engagement metrics like votes and ratings, while useful for reviews, play a smaller role in predicting actual pricing.</li>
+            <li>Features like online ordering and city listing have negligible impact on pricing strategy.</li>
+          </ul>
+          <p>
+            For restaurants aiming to position themselves as premium or justify higher pricing, offering
+            table reservations and adopting higher-end formats such as fine dining can serve as strong
+            signals of value to customers. These features are commonly associated with upscale experiences
+            and may influence customer perception and willingness to pay.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>What Influences Online Orders: A Classification Approach</h2>
+          <p>Analyzing restaurant features to classify and understand the likelihood of online ordering.</p>
+
+          <h3>Exploratory Data Analysis</h3>
+          <p>
+            Analysis of the dataset revealed that online orders outnumber offline ones, indicating that
+            online ordering is the most common behavior among restaurants. A grouped bar chart comparing
+            order types across locations showed that areas such as Koramangala, BTM, and Indiranagar have
+            significantly higher volumes of online orders. This suggests that location plays a key role,
+            with more urban or central areas favoring online ordering.
+          </p>
+          <p>
+            A boxplot comparing the approximate cost for two people by order type revealed a clear pattern:
+            online orders are more prevalent in the low-to-mid cost range, while high-cost restaurants
+            predominantly rely on offline (dine-in or fine dining) orders. This indicates an inverse
+            correlation between cost and the likelihood of online ordering.
+          </p>
+
+          <h3>Statistical Testing</h3>
+          <p>
+            To statistically validate the exploratory findings, ANOVA and Pearson correlation tests were
+            conducted. Several continuous features &mdash; such as cost, rating, location, and restaurant
+            type &mdash; exhibited statistically significant relationships with online ordering behavior.
+            In contrast, none of the original categorical variables showed significance through ANOVA,
+            likely due to the effects of label encoding. These insights informed and refined the feature
+            selection process for the subsequent classification model.
+          </p>
+
+          <h3>Model Performance</h3>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/pricing_strategy/classification.png" alt="Table comparing classification model accuracy, F1 score, and Cohen's Kappa">
+            <figcaption>Classification Model Comparison</figcaption>
+          </figure>
+          <p>
+            Multiple classification models were benchmarked to predict online ordering behavior. Among
+            them, Random Forest delivered the best overall performance, achieving 89% accuracy and an F1
+            score of 0.91 &mdash; indicating strong balance in handling both classes. Cohen&rsquo;s Kappa
+            was also used to assess agreement beyond chance, with Random Forest again scoring highest,
+            reinforcing its reliability. While models such as XGBoost and KNN performed well, Random Forest
+            provided the optimal trade-off between predictive performance and interpretability.
+          </p>
+
+          <h3>Feature Importance</h3>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/pricing_strategy/classification-feature.png" alt="Random Forest feature importance chart for classifying online orders">
+            <figcaption>Classification Feature Importance</figcaption>
+          </figure>
+          <p>
+            After training the Random Forest classifier, feature importance analysis was conducted to
+            identify key drivers of online ordering behavior. The results showed that popularity (measured
+            by vote count) and cuisine variety were the most influential factors. Lower-cost restaurants
+            also tended to receive more online orders, aligning with the notion that customers often
+            reserved dine-in experiences for premium occasions but prefer online orders for quick,
+            affordable meals.
+          </p>
+          <p>
+            Interestingly, restaurant rating had comparatively lower influence, suggesting that when it
+            comes to online ordering, customers may prioritize availability, variety, and cost over reviews
+            or ratings.
+          </p>
+
+          <h3>Inference</h3>
+          <p>This project demonstrates how the same restaurant dataset can be leveraged to solve two different real-world problems:</p>
+          <ul>
+            <li>Helping new restaurants price smartly</li>
+            <li>Helping existing restaurants adapt for online customer behavior</li>
+          </ul>
+          <p>
+            By combining regression and classification models with EDA and statistical testing, we were
+            able to uncover data-driven, actionable insights that can guide both operational decisions and
+            digital strategy for restaurant businesses.
+          </p>
+        </article>
+
+        <a href="../index.html#projects" class="back-link project-back">&larr; Back to Portfolio</a>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact" class="contact">
+    <div class="section-inner contact-inner">
+      <div class="contact-links">
+        <a href="mailto:jsenthilmurugan@illinoistech.edu" class="contact-link">jsenthilmurugan@illinoistech.edu</a>
+        <a href="https://github.com/jayandhan99" class="contact-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/jayandhan-senthil-murugan/" class="contact-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </div>
+      <p class="contact-credit">Designed and built by Jayandhan Senthil Murugan</p>
+    </div>
+  </footer>
+
+  <script src="../assets/js/main.js" defer></script>
+</body>
+</html>

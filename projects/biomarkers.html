@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biomarkers of Aging — Portfolio</title>
+  <meta name="description" content="Predicting chronological age from DNA methylation signatures with interpretable machine learning.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/project.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-brand">JSM</a>
+      <a href="../index.html#projects" class="back-link">&larr; All Projects</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="project-hero">
+      <div class="section-inner">
+        <h1 class="project-title">DNA Methylation and Epigenetic Aging</h1>
+        <p class="project-context">Personal Project</p>
+        <div class="project-tags">
+          <span class="pill">ML</span>
+          <span class="pill">Analytics</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="project-content">
+      <div class="section-inner">
+        <article class="project-section">
+          <p>
+            DNA methylation is both a hallmark and a potential driver of aging. While aging alters
+            methylation patterns over time, certain changes may also regulate biological aging processes
+            like inflammation and cell cycle control. As one of the most consistent epigenetic markers,
+            methylation enables the creation of accurate epigenetic clocks. This project combines
+            biological insight with interpretable machine learning to explore these patterns, with
+            implications for longevity science and personalized health monitoring.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Dataset Understanding</h2>
+          <p>
+            The dataset comprises 656 blood-derived DNA methylation samples, each profiled using the
+            Illumina 450K BeadChip array, resulting in 473,040 CpG features per sample. Each CpG site
+            captures methylation levels at specific genomic locations, enabling detailed epigenetic
+            profiling. The goal is to predict an individual&rsquo;s chronological age based on these
+            high-dimensional methylation signatures.
+          </p>
+
+          <h3>Diversity of the Data</h3>
+          <div class="image-grid">
+            <figure class="project-figure">
+              <img src="../assets/img/projects/biomarkers/diversity-1.png" alt="Histogram of participant age in years">
+              <figcaption>Age Distribution</figcaption>
+            </figure>
+            <figure class="project-figure">
+              <img src="../assets/img/projects/biomarkers/diversity-2.png" alt="Bar chart of samples by source institution">
+              <figcaption>Source Distribution</figcaption>
+            </figure>
+            <figure class="project-figure">
+              <img src="../assets/img/projects/biomarkers/diversity-3.png" alt="Bar chart of samples by processing plate">
+              <figcaption>Plate Distribution</figcaption>
+            </figure>
+            <figure class="project-figure">
+              <img src="../assets/img/projects/biomarkers/diversity-4.png" alt="Bar chart of samples by gender">
+              <figcaption>Gender Distribution</figcaption>
+            </figure>
+            <figure class="project-figure">
+              <img src="../assets/img/projects/biomarkers/diversity-5.png" alt="Bar chart of samples by ethnicity">
+              <figcaption>Ethnicity Distribution</figcaption>
+            </figure>
+            <figure class="project-figure">
+              <img src="../assets/img/projects/biomarkers/diversity-6.png" alt="Bar chart of samples by source institution">
+              <figcaption>Source Distribution</figcaption>
+            </figure>
+          </div>
+          <p>
+            In the exploratory analysis, we observed that participant ages range from 19 to 101 years,
+            with a peak density between 55 and 75 &mdash; offering a strong signal for age prediction
+            modeling. The dataset exhibits some source imbalance, with nearly half the samples sourced
+            from UCSD, followed by Utah, USC, and a smaller subset from Boston. Gender distribution is
+            balanced, with 51.5% females and 48.5% males. Ethnically, the dataset is predominantly
+            composed of Caucasian-European individuals (64.9%) and a significant representation of
+            Hispanic-Mexican participants (35.1%). Additionally, samples were processed across 10
+            different plates with minor unevenness, which may introduce batch effects worth accounting
+            for during model training.
+          </p>
+
+          <h3>Data Preprocessing</h3>
+          <p>
+            Due to the high dimensionality of the dataset, it is computationally intensive and
+            biologically unnecessary to use all features in machine learning models. We computed the
+            Pearson correlation between each CpG site&rsquo;s methylation value and the target variable,
+            age_years. We selected features with an absolute correlation coefficient (|r|) &ge; 0.5. This
+            filtering resulted in 405 CpG sites that are strongly associated with chronological aging.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Model Building and Evaluation</h2>
+          <div class="image-row">
+            <figure class="project-figure">
+              <img src="../assets/img/projects/biomarkers/random-forest.png" alt="Random Forest predicted versus actual age">
+              <figcaption>Random Forest</figcaption>
+            </figure>
+            <figure class="project-figure">
+              <img src="../assets/img/projects/biomarkers/xgboost.png" alt="XGBoost predicted versus actual age">
+              <figcaption>XGBoost</figcaption>
+            </figure>
+            <figure class="project-figure">
+              <img src="../assets/img/projects/biomarkers/elasticnet.png" alt="ElasticNet predicted versus actual age">
+              <figcaption>ElasticNet</figcaption>
+            </figure>
+          </div>
+
+          <p>
+            All three models perform reasonably well, but ElasticNetCV provides the most balanced and
+            accurate predictions across the age spectrum, with residuals showing the least spread and a
+            close fit to the ideal prediction line.
+          </p>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/biomarkers/comparison.png" alt="Comparison of model performance metrics">
+            <figcaption>Model Comparison</figcaption>
+          </figure>
+          <p>
+            Despite the nonlinear capabilities of tree-based models, ElasticNetCV outperformed both Random
+            Forest and XGBoost &mdash; likely due to the strong linear signal in the selected CpG features
+            and the regularization benefits of ElasticNet.
+          </p>
+
+          <figure class="project-figure">
+            <img src="../assets/img/projects/biomarkers/top-20-elasticnet.png" alt="Bar chart of the top 20 CpG sites ranked by ElasticNet coefficient magnitude">
+            <figcaption>Top 20 CpG Sites</figcaption>
+          </figure>
+          <p>
+            The bar chart visualizes the <strong>top 20 CpG sites</strong> ranked by the absolute value of
+            their ElasticNet coefficients. A higher absolute coefficient indicates a stronger contribution
+            to the model&rsquo;s prediction of chronological age.
+          </p>
+          <ul>
+            <li><strong>Positive coefficients</strong> (e.g., <code>cg16867657</code>, <code>cg14361627</code>) suggest that higher methylation levels at those sites are associated with higher predicted age.</li>
+            <li><strong>Negative coefficients</strong> (e.g., <code>cg10501210</code>, <code>cg1820962</code>) indicate that increased methylation is linked to younger predicted age.</li>
+          </ul>
+          <p>
+            The site <code>cg16867657</code> emerged as the most influential with a strong positive
+            coefficient of <strong>13.26</strong>, while <code>cg10501210</code> had the strongest negative
+            effect at <strong>&minus;11.50</strong>.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Male vs. Female Comparison</h2>
+          <p>
+            To explore potential sex-specific epigenetic patterns, we separated the dataset by gender and
+            examined whether the same CpG sites contribute to age prediction in males and females. This
+            allows us to investigate whether age-associated methylation markers are consistent across
+            sexes or if distinct features drive aging signals in each group.
+          </p>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/biomarkers/male-female-comparison.png" alt="Comparison of top predictive CpG sites between male and female models">
+            <figcaption>Male vs. Female Comparison</figcaption>
+          </figure>
+        </article>
+
+        <article class="project-section">
+          <h2>Interpretation and Inference</h2>
+          <p>
+            Retrieved genomic annotations for top CpG sites using the
+            <code>IlluminaHumanMethylation450kanno.ilmn12.hg19</code> Bioconductor package in R, mapping
+            each site to its chromosome, position, associated gene, and regulatory region.
+          </p>
+          <div class="image-row image-row-2">
+            <figure class="project-figure">
+              <img src="../assets/img/projects/biomarkers/female-inference.png" alt="Chromosome locations of top predictive CpG sites in the female model">
+              <figcaption>Female Inference</figcaption>
+            </figure>
+            <figure class="project-figure">
+              <img src="../assets/img/projects/biomarkers/male-inference.png" alt="Chromosome locations of top predictive CpG sites in the male model">
+              <figcaption>Male Inference</figcaption>
+            </figure>
+          </div>
+          <p>
+            The CpG sites <code>cg16867657</code> (chr6), <code>cg14361624</code> (chr7), and
+            <code>cg10501210</code> (chr1) were among the most contributing features in both male and
+            female models. The recurrence of these sites across sexes underscores their potential role as
+            robust, sex-independent epigenetic biomarkers.
+          </p>
+          <p>
+            Notably, <code>cg16867657</code>, <code>cg04826368</code>, and <code>cg01820962</code>, all
+            located on chromosome 6, ranked among the top 8 most predictive CpG features in the male
+            model. This suggests a potential male-specific epigenetic signature on chr6, highlighting its
+            role in age-associated methylation patterns.
+          </p>
+          <p>
+            While chromosome 2 appeared in the top features for both male and female models, it was more
+            prominent in females, with four CpG sites ranked among the top contributors. However, given
+            the modest sample size (~650 samples), these observations should be interpreted cautiously. A
+            larger, more diverse dataset may help confirm whether these chromosome-specific patterns are
+            biologically significant or sample-dependent.
+          </p>
+          <p>
+            One particularly notable site, <code>cg11847992</code>, had a strong negative coefficient and
+            ranked as the second most predictive feature in the female model. Its exclusive appearance in
+            the female-specific feature set suggests it may be involved in early-age methylation
+            regulation uniquely in females, warranting further investigation.
+          </p>
+        </article>
+
+        <a href="../index.html#projects" class="back-link project-back">&larr; Back to Portfolio</a>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact" class="contact">
+    <div class="section-inner contact-inner">
+      <div class="contact-links">
+        <a href="mailto:jsenthilmurugan@illinoistech.edu" class="contact-link">jsenthilmurugan@illinoistech.edu</a>
+        <a href="https://github.com/jayandhan99" class="contact-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/jayandhan-senthil-murugan/" class="contact-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </div>
+      <p class="contact-credit">Designed and built by Jayandhan Senthil Murugan</p>
+    </div>
+  </footer>
+
+  <script src="../assets/js/main.js" defer></script>
+</body>
+</html>

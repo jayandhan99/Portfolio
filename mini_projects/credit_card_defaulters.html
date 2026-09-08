@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Credit Card Defaulters — Portfolio</title>
+  <meta name="description" content="A multi-model classification study on the German Credit dataset that prioritizes catching loan defaulters over raw accuracy.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/project.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-brand">JSM</a>
+      <a href="../index.html#mini-projects" class="back-link">&larr; All Projects</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="project-hero">
+      <div class="section-inner">
+        <h1 class="project-title">Predicting <span class="text-accent">Credit Defaulters</span> Before the Bank Says Yes</h1>
+        <p class="project-context">Personal Project</p>
+        <div class="project-tags">
+          <span class="pill">ML</span>
+          <span class="pill">Analytics</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="project-content">
+      <div class="section-inner">
+        <article class="project-section">
+          <p>
+            A multi-model classification study on the German Credit dataset &mdash; built in Alteryx
+            &mdash; that prioritizes catching loan defaulters over raw accuracy, because in credit risk, a
+            missed defaulter costs far more than a rejected good customer.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>The Problem</h2>
+          <div class="callout-box">
+            <div class="callout-label">PROBLEM STATEMENT</div>
+            <p>
+              A bank needs to decide whether to approve a loan application. Approving a loan for someone
+              who will default is a direct financial loss. Rejecting a good customer is a missed
+              opportunity &mdash; but not a loss. The model must be tuned to <strong>catch defaulters
+              aggressively</strong>, even at the cost of some false alarms.
+            </p>
+          </div>
+
+          <p>This asymmetry in cost means we cannot evaluate the model purely on accuracy. The question we must ask is:</p>
+          <p><em>&ldquo;Of all the people who will actually default &mdash; how many did the model correctly identify?&rdquo;</em></p>
+
+          <div class="cost-grid">
+            <div class="cost-card bad">
+              <div class="verdict">HIGH COST ERROR</div>
+              <h3>Predicted Creditworthy &rarr; Actually Defaults</h3>
+              <p>Bank approves the loan. Customer defaults. Bank loses principal + interest. <strong>Real financial loss.</strong></p>
+            </div>
+            <div class="cost-card ok">
+              <div class="verdict">LOW COST ERROR</div>
+              <h3>Predicted Non-Creditworthy &rarr; Actually Fine</h3>
+              <p>Bank rejects a good customer. Missed revenue, but no capital is lost. Acceptable tradeoff.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-section">
+          <h2>Pipeline</h2>
+          <p>Built entirely in Alteryx. Each step was deliberate &mdash; feature cleanup, category collapsing, oversampling the minority class, then training four models side by side.</p>
+
+          <figure class="project-figure">
+            <img src="../assets/img/mini_projects/credit_card_defaulters/alteryx-workflow.png" alt="Alteryx workflow showing data input, formula tools, oversampling, and four parallel models feeding into a model comparison tool">
+            <figcaption>Alteryx Workflow</figcaption>
+          </figure>
+
+          <div class="pipeline">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                <h3>Feature Selection &mdash; Select Tool</h3>
+                <p>Started with 20 features. Dropped 6 that were low signal for credit risk or had poor data quality.</p>
+                <div class="features-grid">
+                  <div class="feature-chip"><span class="dot kept"></span>Account Balance</div>
+                  <div class="feature-chip"><span class="dot kept"></span>Duration of Credit</div>
+                  <div class="feature-chip"><span class="dot kept"></span>Payment Status</div>
+                  <div class="feature-chip"><span class="dot kept"></span>Purpose</div>
+                  <div class="feature-chip"><span class="dot kept"></span>Credit Amount</div>
+                  <div class="feature-chip"><span class="dot kept"></span>Value Savings/Stocks</div>
+                  <div class="feature-chip"><span class="dot kept"></span>Employment Length</div>
+                  <div class="feature-chip"><span class="dot kept"></span>Instalment %</div>
+                  <div class="feature-chip"><span class="dot kept"></span>Sex &amp; Marital Status</div>
+                  <div class="feature-chip"><span class="dot kept"></span>Guarantors</div>
+                  <div class="feature-chip"><span class="dot kept"></span>No of Credits</div>
+                  <div class="feature-chip"><span class="dot kept"></span>Occupation</div>
+                  <div class="feature-chip"><span class="dot kept"></span>Concurrent Credits</div>
+                  <div class="feature-chip"><span class="dot kept"></span>Age</div>
+                  <div class="feature-chip dropped"><span class="dot drop"></span>Duration in Address</div>
+                  <div class="feature-chip dropped"><span class="dot drop"></span>Valuable Asset</div>
+                  <div class="feature-chip dropped"><span class="dot drop"></span>Type of Apartment</div>
+                  <div class="feature-chip dropped"><span class="dot drop"></span>No of Dependents</div>
+                  <div class="feature-chip dropped"><span class="dot drop"></span>Telephone</div>
+                  <div class="feature-chip dropped"><span class="dot drop"></span>Foreign Worker</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                <h3>Category Binning &mdash; Formula Tool (Pass 1)</h3>
+                <p>Collapsed sparse categories to reduce noise. Example: Account Balance values 3 and 4 merged into one group; Payment Status values 0 and 1 merged into &ldquo;Some Problems&rdquo;.</p>
+                <div class="code-block"><span class="comment">// Account Balance: merge categories 3 &amp; 4</span>
+<span class="fn">IIF</span>([Account Balance]=<span class="str">'4'</span>, <span class="str">'3'</span>, [Account Balance])
+
+<span class="comment">// Employment: merge short tenures (1 &amp; 2 &rarr; "under 1yr")</span>
+<span class="fn">IIF</span>([Length of current employment]=<span class="str">'1'</span>
+  OR [Length of current employment]=<span class="str">'2'</span>, <span class="str">'1'</span>,
+  [Length of current employment])
+
+<span class="comment">// Concurrent Credits: binary (at this bank vs other)</span>
+<span class="fn">IIF</span>([Concurrent Credits]!=<span class="str">'3'</span>, <span class="str">'1'</span>, [Concurrent Credits])</div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-body">
+                <h3>Human-Readable Labels &mdash; Formula Tool (Pass 2)</h3>
+                <p>Converted numeric codes to meaningful labels for model interpretability and reporting.</p>
+                <div class="code-block"><span class="comment">// Account Balance: numeric &rarr; label</span>
+<span class="fn">IIF</span>([Account Balance]=<span class="str">'1'</span>, <span class="str">'No Account'</span>,
+  <span class="fn">IIF</span>([Account Balance]=<span class="str">'2'</span>, <span class="str">'None'</span>, <span class="str">'Some Balance'</span>))
+
+<span class="comment">// Creditability: target variable label</span>
+<span class="fn">IIF</span>([Creditability]=<span class="str">'1'</span>, <span class="str">'Creditworthy'</span>, <span class="str">'Non-Creditworthy'</span>)
+
+<span class="comment">// Purpose: group into meaningful loan types</span>
+<span class="fn">IIF</span>([Purpose]=<span class="str">'1'</span>, <span class="str">'New Car'</span>,
+  <span class="fn">IIF</span>([Purpose]=<span class="str">'2'</span>, <span class="str">'Used Car'</span>,
+    <span class="fn">IIF</span>([Purpose]=<span class="str">'3'</span>, <span class="str">'Home Related'</span>, <span class="str">'Other'</span>)))</div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-body">
+                <h3>Oversampling &mdash; Minority Class</h3>
+                <p>The dataset was imbalanced &mdash; more creditworthy than non-creditworthy applicants. Oversampled the <strong>Non-Creditworthy</strong> class at 50% to give the model enough examples of defaulters to learn from. This is critical: without it, the model would bias toward predicting everyone as creditworthy.</p>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-num">5</div>
+              <div class="step-body">
+                <h3>Train / Validation Split &mdash; 50:50</h3>
+                <p>Used Alteryx Create Samples tool to split into 50% estimation (training) and 50% validation. Applied after oversampling to prevent data leakage.</p>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-num">6</div>
+              <div class="step-body">
+                <h3>Model Training &mdash; 4 Models in Parallel</h3>
+                <p>Trained Logistic Regression, Decision Tree, Random Forest, and a Boosted Model simultaneously. All fed into a single Model Comparison tool to evaluate on the same validation set.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-section">
+          <h2>What to Look for in the Results</h2>
+          <p>
+            Overall accuracy is the wrong metric here. A model that always predicts &ldquo;Creditworthy&rdquo;
+            would get ~70% accuracy on a typical credit dataset &mdash; but it would catch
+            <strong>zero defaulters</strong>. Here&rsquo;s what actually matters:
+          </p>
+
+          <div class="metric-hero">
+            <div class="metric-big">
+              <div class="metric-label">PRIMARY METRIC</div>
+              <div class="metric-value">Recall</div>
+              <div class="metric-sub">Non-Creditworthy class</div>
+            </div>
+            <div class="metric-matrix">
+              <h3>Confusion Matrix &mdash; What Each Cell Means</h3>
+              <table class="matrix-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Predicted: Good</th>
+                    <th>Predicted: Defaulter</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="row-label">Actual: Good</td>
+                    <td class="tp">&check; True Negative<span class="cell-note">Correctly approved</span></td>
+                    <td class="fp">False Positive<span class="cell-note">Good customer rejected</span></td>
+                  </tr>
+                  <tr>
+                    <td class="row-label">Actual: Defaulter</td>
+                    <td class="fn">&#9888; False Negative<span class="cell-note">Defaulter approved &mdash; COSTLY</span></td>
+                    <td class="tp">&check; True Positive<span class="cell-note">Defaulter caught</span></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="matrix-warning">
+                <strong>False Negatives are the most expensive error.</strong> This is a defaulter the model missed &mdash; the bank approved them and will lose money. Minimizing this cell is the primary goal.
+              </div>
+            </div>
+          </div>
+
+          <h3>Metric Priority for This Problem</h3>
+          <div class="takeaway-list">
+            <div class="takeaway">
+              <div class="takeaway-icon">&#127919;</div>
+              <div class="takeaway-text">
+                <h3>1. Recall (Non-Creditworthy) &mdash; Most Important</h3>
+                <p>Of all actual defaulters, how many did the model catch? A high recall means fewer defaulters slip through. This is the number the bank cares about most.</p>
+              </div>
+            </div>
+            <div class="takeaway">
+              <div class="takeaway-icon">&#9878;&#65039;</div>
+              <div class="takeaway-text">
+                <h3>2. Precision (Non-Creditworthy)</h3>
+                <p>Of all applicants the model flagged as defaulters, how many actually were? Low precision means too many good customers are being rejected &mdash; a business cost, but less severe than missed defaulters.</p>
+              </div>
+            </div>
+            <div class="takeaway">
+              <div class="takeaway-icon">&#128202;</div>
+              <div class="takeaway-text">
+                <h3>3. Lift Curve &mdash; Ranking Quality</h3>
+                <p>Shows how much better the model is at ranking defaulters to the top compared to random. A lift of 2.0 at 10% means the model finds twice as many defaulters in the top 10% of predictions vs a random list.</p>
+              </div>
+            </div>
+            <div class="takeaway">
+              <div class="takeaway-icon">&#128200;</div>
+              <div class="takeaway-text">
+                <h3>4. AUC-ROC &mdash; Overall Discrimination</h3>
+                <p>Measures how well the model separates creditworthy from non-creditworthy across all thresholds. Useful for comparing models, but less actionable than recall for this specific problem.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-section">
+          <h2>Model Results</h2>
+          <p>All four models were evaluated on the same held-out validation set using Alteryx&rsquo;s Model Comparison tool. Charts below show performance across Lift, Gain, Precision-Recall, and ROC.</p>
+
+          <div class="chart-grid">
+            <div class="chart-card">
+              <img src="../assets/img/mini_projects/credit_card_defaulters/lift_curve.png" alt="Lift curve comparing Logistic Regression, Decision Tree, Random Forest, and Test Model">
+              <div class="chart-info">
+                <div class="chart-title">Lift Curve</div>
+                <p class="chart-desc">Random Forest reaches lift ~2.0 at low prediction rates &mdash; it correctly ranks defaulters to the top of the list, doubling the hit rate vs random selection.</p>
+                <span class="winner-badge">Random Forest wins</span>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <img src="../assets/img/mini_projects/credit_card_defaulters/gain_chart.png" alt="Gain chart comparing model performance">
+              <div class="chart-info">
+                <div class="chart-title">Gain Chart</div>
+                <p class="chart-desc">Confirms Random Forest captures the highest proportion of true defaulters earliest. By the time you&rsquo;ve reviewed 40% of predictions, RF has already found ~80% of all defaulters.</p>
+                <span class="winner-badge">Random Forest wins</span>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <img src="../assets/img/mini_projects/credit_card_defaulters/precision_recall.png" alt="Precision-recall curve comparing model performance">
+              <div class="chart-info">
+                <div class="chart-title">Precision&ndash;Recall Curve</div>
+                <p class="chart-desc">Random Forest maintains the highest precision across most recall levels. Decision Tree starts strong but precision drops fast as recall increases.</p>
+                <span class="winner-badge">Random Forest wins</span>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <img src="../assets/img/mini_projects/credit_card_defaulters/roc_curve.png" alt="ROC curve comparing model performance">
+              <div class="chart-info">
+                <div class="chart-title">ROC Curve</div>
+                <p class="chart-desc">Random Forest has the largest area under the curve, confirming the best overall discrimination between creditworthy and non-creditworthy applicants.</p>
+                <span class="winner-badge">Random Forest wins</span>
+              </div>
+            </div>
+          </div>
+
+          <h3>Model Comparison Summary</h3>
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>MODEL</th>
+                <th>LIFT (early)</th>
+                <th>ROC AUC</th>
+                <th>RECALL &mdash; DEFAULTERS</th>
+                <th>NOTES</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="best">
+                <td>Random Forest</td>
+                <td class="best-cell">~2.0</td>
+                <td class="best-cell">Highest</td>
+                <td class="best-cell">Best</td>
+                <td>Consistent winner across all four charts</td>
+              </tr>
+              <tr>
+                <td>Decision Tree</td>
+                <td>~2.0 (brief)</td>
+                <td>Competitive</td>
+                <td>Moderate</td>
+                <td>Strong early lift but precision drops fast</td>
+              </tr>
+              <tr>
+                <td>Logistic Regression</td>
+                <td>~1.6</td>
+                <td>Good</td>
+                <td>Moderate</td>
+                <td>Stable but weaker at ranking defaulters early</td>
+              </tr>
+              <tr>
+                <td>Boosted Model (Test)</td>
+                <td>~1.8 (drops fast)</td>
+                <td>Below RF</td>
+                <td>Lower</td>
+                <td>Underperforms relative to expectations</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Key Takeaways</h3>
+          <div class="takeaway-list">
+            <div class="takeaway">
+              <div class="takeaway-icon">&#127942;</div>
+              <div class="takeaway-text">
+                <h3>Random Forest is the recommended model</h3>
+                <p>It wins on every evaluation metric &mdash; lift, gain, precision-recall, and ROC. It also benefits from ensemble averaging, which reduces the risk of overfitting that the single Decision Tree faces.</p>
+              </div>
+            </div>
+            <div class="takeaway">
+              <div class="takeaway-icon">&#9888;&#65039;</div>
+              <div class="takeaway-text">
+                <h3>Oversampling was essential</h3>
+                <p>Without oversampling the Non-Creditworthy class, all models would have been biased toward predicting everyone as creditworthy &mdash; achieving high accuracy while missing most defaulters.</p>
+              </div>
+            </div>
+            <div class="takeaway">
+              <div class="takeaway-icon">&#128269;</div>
+              <div class="takeaway-text">
+                <h3>Accuracy alone is misleading</h3>
+                <p>In imbalanced classification problems like credit risk, a model optimized for accuracy can still be commercially useless. The evaluation framework must match the business cost structure.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-section">
+          <h2>Tools Used</h2>
+          <div class="tool-row">
+            <span class="tool-tag">Alteryx Designer</span>
+            <span class="tool-tag">Select Tool</span>
+            <span class="tool-tag">Formula Tool</span>
+            <span class="tool-tag">Oversample Tool</span>
+            <span class="tool-tag">Create Samples</span>
+            <span class="tool-tag">Logistic Regression</span>
+            <span class="tool-tag">Decision Tree</span>
+            <span class="tool-tag">Random Forest</span>
+            <span class="tool-tag">Boosted Model</span>
+            <span class="tool-tag">Model Comparison</span>
+          </div>
+        </article>
+
+        <a href="../index.html#mini-projects" class="back-link project-back">&larr; Back to Portfolio</a>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact" class="contact">
+    <div class="section-inner contact-inner">
+      <div class="contact-links">
+        <a href="mailto:jsenthilmurugan@illinoistech.edu" class="contact-link">jsenthilmurugan@illinoistech.edu</a>
+        <a href="https://github.com/jayandhan99" class="contact-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/jayandhan-senthil-murugan/" class="contact-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </div>
+      <p class="contact-credit">Designed and built by Jayandhan Senthil Murugan</p>
+    </div>
+  </footer>
+
+  <script src="../assets/js/main.js" defer></script>
+</body>
+</html>

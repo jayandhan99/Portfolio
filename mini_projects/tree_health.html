@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tree Health — Portfolio</title>
+  <meta name="description" content="Classifying coconut palm health from drone imagery to catch Root Wilt disease early.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/project.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-brand">JSM</a>
+      <a href="../index.html#mini-projects" class="back-link">&larr; All Projects</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="project-hero">
+      <div class="section-inner">
+        <h1 class="project-title">Tree Health Classification Using Image Processing</h1>
+        <p class="project-context">Personal Project</p>
+        <div class="project-tags">
+          <span class="pill">ML</span>
+        </div>
+        <figure class="project-figure">
+          <img src="../assets/img/mini_projects/tree_health/cover.jpg" alt="Aerial view of a coconut plantation canopy">
+        </figure>
+      </div>
+    </section>
+
+    <section class="project-content">
+      <div class="section-inner">
+        <article class="project-section">
+          <p>
+            Coconut plantations in regions such as Kerala face severe yield loss from Root Wilt disease,
+            which has no cure once established. Early detection is critical because symptoms often appear
+            in foliage before the disease is visible at ground level.
+          </p>
+          <p>
+            This project applies computer vision to drone-captured imagery of coconut groves. By analyzing
+            color distributions and pixel-level patterns in canopy images, the pipeline classifies trees as
+            healthy or showing early stress signals associated with Root Wilt and related conditions.
+          </p>
+
+          <h3>Approach</h3>
+          <p>
+            Images are preprocessed to normalize lighting and focus on canopy regions. Color-space features
+            and texture descriptors capture subtle yellowing and structural changes that precede advanced
+            infection. A supervised classifier is trained on labeled examples to separate healthy palms
+            from those showing early disease indicators.
+          </p>
+          <p>
+            The goal is operational: flag at-risk trees early so farmers can isolate affected areas, adjust
+            irrigation or nutrition, and limit spread &mdash; reducing crop loss and supporting more
+            sustainable plantation management.
+          </p>
+
+          <h3>Technologies</h3>
+          <p>Python, OpenCV, image processing, and machine learning for aerial crop-health monitoring.</p>
+        </article>
+
+        <a href="../index.html#mini-projects" class="back-link project-back">&larr; Back to Portfolio</a>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact" class="contact">
+    <div class="section-inner contact-inner">
+      <div class="contact-links">
+        <a href="mailto:jsenthilmurugan@illinoistech.edu" class="contact-link">jsenthilmurugan@illinoistech.edu</a>
+        <a href="https://github.com/jayandhan99" class="contact-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/jayandhan-senthil-murugan/" class="contact-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </div>
+      <p class="contact-credit">Designed and built by Jayandhan Senthil Murugan</p>
+    </div>
+  </footer>
+
+  <script src="../assets/js/main.js" defer></script>
+</body>
+</html>
