@@ -300,6 +300,11 @@ button {
 /* ==========================================================================
    About
    ========================================================================== */
+#about .section-inner {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
 .about-grid {
   display: grid;
   grid-template-columns: 3fr 2fr;
@@ -313,16 +318,17 @@ button {
   line-height: 1.7;
 }
 
-.photo-placeholder {
+.about-photo {
+  max-width: 260px;
+  margin: 0 auto;
+}
+
+.profile-photo {
+  width: 100%;
   aspect-ratio: 4 / 5;
+  object-fit: cover;
   border-radius: 16px;
-  border: 1px dashed rgb(255 255 255 / 20%);
-  background: var(--color-surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-muted);
-  font-family: var(--font-heading);
+  border: 1px solid rgb(255 255 255 / 8%);
 }
 
 /* ==========================================================================
@@ -569,11 +575,6 @@ button {
 
   .about-grid {
     grid-template-columns: 1fr;
-  }
-
-  .about-photo {
-    max-width: 260px;
-    margin: 0 auto;
   }
 
   .section-inner {
