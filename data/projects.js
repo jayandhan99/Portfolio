@@ -18,6 +18,7 @@ const projects = [
     title: 'Department of Growth',
     context: 'Department of Growth',
     tags: ['LLM', 'RAG'],
+    cover: 'assets/img/projects/department_of_growth/ingest-ask.png',
   },
   {
     slug: 'ai-tutor',

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Department of Growth — Portfolio</title>
+  <meta name="description" content="A competitive intelligence platform: RAG-powered Q&amp;A, AI-generated intelligence reports, and an idempotent scheduled email digest.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +17,285 @@
   <link rel="stylesheet" href="../assets/css/project.css">
 </head>
 <body>
-  <!-- Department of Growth project detail content goes here -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-brand">JSM</a>
+      <a href="../index.html#projects" class="back-link">&larr; All Projects</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="project-hero">
+      <div class="section-inner">
+        <h1 class="project-title">Guidant Intelligence</h1>
+        <p class="project-context">Department of Growth &mdash; Competitive Intelligence &amp; Weekly Email Reports</p>
+        <div class="project-tags">
+          <span class="pill">LLM</span>
+          <span class="pill">RAG</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="project-content">
+      <div class="section-inner">
+        <article class="project-section">
+          <h2>Overview</h2>
+          <p>
+            A Python platform for competitive and industry intelligence, built around the electrical
+            safety industry (NFPA 70E, arc flash, compliance training) with <strong>Guidant Power</strong>
+            as the reference client profile. It scrapes competitor and publication sources into SQLite,
+            answers questions over that content with a retrieval-augmented pipeline, and runs a scheduled
+            email digest that summarizes only net-new articles since the last successful send.
+          </p>
+
+          <h3>What It Does</h3>
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Workflow</th>
+                <th>Entry Point</th>
+                <th>What It Does</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Interactive CLI</td>
+                <td><code>main.py</code></td>
+                <td>Natural-language Q&amp;A routed through specialized intelligence modules (competitor intel, topic extraction, EDGAR analysis) using the configured LLM provider.</td>
+              </tr>
+              <tr>
+                <td>Publications RAG</td>
+                <td><code>run.py</code></td>
+                <td>Menu-driven ingest &rarr; ask &rarr; compare workflow. Syncs sources, stores chunks in ChromaDB, answers questions with semantic retrieval + LLM synthesis.</td>
+              </tr>
+              <tr>
+                <td>Web UI</td>
+                <td><code>streamlit_app.py</code></td>
+                <td>Browser dashboard for competitor/date-window ingest, ad-hoc URL ingestion, filtered Q&amp;A, and RAG observability metrics.</td>
+              </tr>
+              <tr>
+                <td>Competitor digest email</td>
+                <td><code>weekly_emailer/job.py</code></td>
+                <td>Scrapes every competitor source, persists to SQLite, and emails net-new articles since the last successful digest via SMTP.</td>
+              </tr>
+              <tr>
+                <td>Intelligence Orchestrator</td>
+                <td><code>report_orchestrator.py</code></td>
+                <td>Standalone RSS-to-SQLite pipeline: ingests, deduplicates, fetches full article text, summarizes with Claude, and writes a Markdown report.</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+
+        <article class="project-section">
+          <h2>Email Pipeline: v1 &rarr; v2</h2>
+          <p>
+            The digest pipeline went through a real architectural revision. <strong>v1</strong> live-scraped
+            every source at send time, then summarized and sent &mdash; slow, and it kept re-scraping
+            homepages that hadn&rsquo;t changed. <strong>v2</strong> decouples scraping from delivery:
+            articles are scraped and persisted to SQLite first, then a query pulls only what&rsquo;s new
+            since the last successful send, summarizes just that, and records the send timestamp only on
+            success.
+          </p>
+          <p>
+            That makes the send cadence idempotent &mdash; a crash mid-run can&rsquo;t cause duplicate
+            sends or silently dropped articles, because the &ldquo;what&rsquo;s new&rdquo; window is
+            derived from a persisted timestamp, not from in-memory state.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Architecture</h2>
+          <p>
+            Every entry point (CLI, RAG menu, Streamlit, the digest job, and the standalone orchestrator)
+            shares the same underlying data: a SQLite article store for dedup and scheduling state, a
+            ChromaDB vector store for semantic search, and a unified LLM client that abstracts Ollama,
+            Claude, and Gemini behind one interface.
+          </p>
+          <figure class="project-figure">
+            <svg viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Architecture diagram: sources feed an ingest and dedup stage backed by SQLite, which fans out to a ChromaDB vector store and an LLM summarizer, both feeding the CLI, Streamlit, email digest, and Markdown report outputs">
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" style="fill: var(--color-muted);"></path>
+                </marker>
+              </defs>
+
+              <g style="font-family: var(--font-body);">
+                <rect x="10" y="95" width="140" height="70" rx="8" style="fill: var(--color-surface); stroke: rgb(255 255 255 / 10%);"></rect>
+                <text x="80" y="125" text-anchor="middle" style="fill: var(--color-text); font-size: 15px; font-weight: 600;">Sources</text>
+                <text x="80" y="144" text-anchor="middle" style="fill: var(--color-muted); font-size: 11px;">RSS &middot; competitor pages</text>
+
+                <rect x="200" y="95" width="170" height="70" rx="8" style="fill: var(--color-surface); stroke: rgb(255 255 255 / 10%);"></rect>
+                <text x="285" y="125" text-anchor="middle" style="fill: var(--color-text); font-size: 15px; font-weight: 600;">Ingest &amp; Dedup</text>
+                <text x="285" y="144" text-anchor="middle" style="fill: var(--color-muted); font-size: 11px;">SQLite</text>
+
+                <rect x="430" y="15" width="170" height="70" rx="8" style="fill: var(--color-surface); stroke: rgb(56 182 255 / 30%);"></rect>
+                <text x="515" y="45" text-anchor="middle" style="fill: var(--color-text); font-size: 15px; font-weight: 600;">Vector Store</text>
+                <text x="515" y="64" text-anchor="middle" style="fill: var(--color-muted); font-size: 11px;">ChromaDB</text>
+
+                <rect x="430" y="175" width="170" height="70" rx="8" style="fill: var(--color-surface); stroke: rgb(56 182 255 / 30%);"></rect>
+                <text x="515" y="205" text-anchor="middle" style="fill: var(--color-text); font-size: 15px; font-weight: 600;">LLM Summarize</text>
+                <text x="515" y="224" text-anchor="middle" style="fill: var(--color-muted); font-size: 11px;">Ollama &middot; Claude &middot; Gemini</text>
+
+                <rect x="660" y="95" width="230" height="70" rx="8" style="fill: var(--color-surface); stroke: rgb(255 255 255 / 10%);"></rect>
+                <text x="775" y="122" text-anchor="middle" style="fill: var(--color-text); font-size: 15px; font-weight: 600;">Outputs</text>
+                <text x="775" y="141" text-anchor="middle" style="fill: var(--color-muted); font-size: 11px;">CLI &middot; Streamlit &middot; Digest &middot; Report</text>
+
+                <line x1="152" y1="130" x2="196" y2="130" style="stroke: var(--color-muted); stroke-width: 2;" marker-end="url(#arrow)"></line>
+                <line x1="372" y1="112" x2="426" y2="60" style="stroke: var(--color-muted); stroke-width: 2;" marker-end="url(#arrow)"></line>
+                <line x1="372" y1="148" x2="426" y2="200" style="stroke: var(--color-muted); stroke-width: 2;" marker-end="url(#arrow)"></line>
+                <line x1="602" y1="58" x2="656" y2="115" style="stroke: var(--color-muted); stroke-width: 2;" marker-end="url(#arrow)"></line>
+                <line x1="602" y1="202" x2="656" y2="145" style="stroke: var(--color-muted); stroke-width: 2;" marker-end="url(#arrow)"></line>
+              </g>
+            </svg>
+            <figcaption>High-level data flow shared by every entry point</figcaption>
+          </figure>
+
+          <h3>Tech Stack</h3>
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Layer</th>
+                <th>Tool</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>LLM providers</td>
+                <td>Ollama &middot; Claude API &middot; Gemini API</td>
+                <td>Selectable at runtime via <code>LLM_PROVIDER</code>; one unified client interface</td>
+              </tr>
+              <tr>
+                <td>Vector store</td>
+                <td>ChromaDB</td>
+                <td>Stores embedded chunks for retrieval-augmented Q&amp;A</td>
+              </tr>
+              <tr>
+                <td>Embeddings</td>
+                <td>sentence-transformers + torch</td>
+                <td>Local embedding generation, no external embedding API</td>
+              </tr>
+              <tr>
+                <td>Persistence</td>
+                <td>SQLite</td>
+                <td>Article store, content-hash dedup, and digest send-log</td>
+              </tr>
+              <tr>
+                <td>Email delivery</td>
+                <td>smtplib (stdlib)</td>
+                <td>HTML digest delivery over SMTP &mdash; Gmail, Microsoft 365, etc.</td>
+              </tr>
+              <tr>
+                <td>Scheduling</td>
+                <td>APScheduler</td>
+                <td>In-process weekly cron for the digest job</td>
+              </tr>
+              <tr>
+                <td>Scraping</td>
+                <td>feedparser, httpx, BeautifulSoup, Playwright</td>
+                <td>RSS parsing and HTML extraction, with a headless-browser fallback for sites that block basic fetches</td>
+              </tr>
+              <tr>
+                <td>Web UI</td>
+                <td>Streamlit</td>
+                <td>Ingest, ask, and observability dashboard</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+
+        <article class="project-section">
+          <h2>Ingest &amp; Ask</h2>
+          <p>
+            The Streamlit dashboard walks through ingesting content before &mdash; or instead of &mdash;
+            asking a question, with a data-health check and query-observability panel (latency, cache,
+            reliability, cost) up front.
+          </p>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/department_of_growth/ingest-ask.png" alt="Guidant Intelligence Ingest and Ask tab with data health and query observability accordions">
+            <figcaption>Ingest &amp; Ask &mdash; landing view</figcaption>
+          </figure>
+
+          <p>Links can be ingested two ways: paste new URLs directly, or select from the pre-existing competitor manifest.</p>
+          <div class="image-row image-row-2">
+            <figure class="project-figure">
+              <img src="../assets/img/projects/department_of_growth/ingestion-path-links.png" alt="Ingestion path form set to provide links to ingest, with a time window and competitor tag">
+              <figcaption>Ingestion Path &mdash; provide links</figcaption>
+            </figure>
+            <figure class="project-figure">
+              <img src="../assets/img/projects/department_of_growth/ingestion-path-existing.png" alt="Ingestion path form set to select pre-existing links from the competitor manifest">
+              <figcaption>Ingestion Path &mdash; pre-existing links</figcaption>
+            </figure>
+          </div>
+
+          <p>Questions can be scoped to a single competitor and locked to the same ingestion window, so answers never reach beyond the data that was actually pulled in.</p>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/department_of_growth/ask-question.png" alt="Ask Question panel scoped to a competitor and locked to the ingestion window">
+            <figcaption>Ask Question &mdash; scoped retrieval</figcaption>
+          </figure>
+        </article>
+
+        <article class="project-section">
+          <h2>Articles Database</h2>
+          <p>
+            Every scraped article lives in <code>scrape_log.db</code> and can be browsed, filtered, and
+            deleted from the UI &mdash; deleting an article resets its dedup state so it&rsquo;s treated
+            as new on the next scrape, which doubles as a demo tool for showing the ingestion pipeline
+            pick up &ldquo;new&rdquo; content on demand.
+          </p>
+          <div class="image-row image-row-2">
+            <figure class="project-figure">
+              <img src="../assets/img/projects/department_of_growth/articles-database.png" alt="Articles Database tab showing filter by source, search by title, and shown/total/hidden counts">
+              <figcaption>Articles Database &mdash; filters &amp; counts</figcaption>
+            </figure>
+            <figure class="project-figure">
+              <img src="../assets/img/projects/department_of_growth/articles-table.png" alt="Articles table with per-row delete buttons and a bulk delete-all-visible action">
+              <figcaption>Articles Database &mdash; browse &amp; delete</figcaption>
+            </figure>
+          </div>
+        </article>
+
+        <article class="project-section">
+          <h2>Intelligence Reports</h2>
+          <p>
+            Pulls the latest articles from every competitor source in the manifest, skips anything already
+            in the database, and summarizes each new article in the same layout used by the weekly email
+            digest &mdash; so the in-app report and the email a stakeholder receives are generated by the
+            same code path.
+          </p>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/department_of_growth/intelligence-reports.png" alt="Intelligence Reports tab with a Run Latest Scrape and Sync button">
+            <figcaption>Intelligence Reports &mdash; on-demand digest</figcaption>
+          </figure>
+        </article>
+
+        <article class="project-section">
+          <h2>Engineering Highlights</h2>
+          <ul>
+            <li><strong>Idempotent digest sends:</strong> a dedicated <code>guidant_digest_runs</code> table records only successful sends, so the &ldquo;net-new since last time&rdquo; window survives crashes and restarts without re-sending or dropping articles.</li>
+            <li><strong>Content-hash dedup:</strong> articles are deduplicated by a hash of their content, not just URL, so a re-scraped but unchanged page is skipped automatically.</li>
+            <li><strong>One LLM client, three providers:</strong> Ollama, Claude, and Gemini sit behind a single client interface with separate narrative/JSON model slots, so swapping providers is a config change, not a code change.</li>
+            <li><strong>Shared state, independent pipelines:</strong> the standalone Markdown-report orchestrator and the email digest both read and write the same SQLite store, so a manual orchestrator run can feed the next scheduled digest without any extra wiring.</li>
+            <li><strong>Scoped, windowed retrieval:</strong> RAG questions can be locked to a specific competitor and ingestion time window, preventing answers from silently drawing on unrelated or stale content.</li>
+          </ul>
+        </article>
+
+        <a href="../index.html#projects" class="back-link project-back">&larr; Back to Portfolio</a>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact" class="contact">
+    <div class="section-inner contact-inner">
+      <div class="contact-links">
+        <a href="mailto:jsenthilmurugan@illinoistech.edu" class="contact-link">jsenthilmurugan@illinoistech.edu</a>
+        <a href="https://github.com/jayandhan99" class="contact-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/jayandhan-senthil-murugan/" class="contact-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </div>
+      <p class="contact-credit">Designed and built by Jayandhan Senthil Murugan</p>
+    </div>
+  </footer>
 
   <script src="../assets/js/main.js" defer></script>
 </body>
