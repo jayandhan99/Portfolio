@@ -24,6 +24,7 @@ const projects = [
     title: 'AI Tutor',
     context: 'Scarlet Studio',
     tags: ['LLM', 'Agents'],
+    cover: 'assets/img/projects/ai-tutor/api-docs.png',
   },
   {
     slug: 'gaia',

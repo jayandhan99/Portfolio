@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Tutor — Portfolio</title>
+  <meta name="description" content="A multi-agent course builder that turns learning objectives into complete syllabi, lessons, and assessments.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +17,66 @@
   <link rel="stylesheet" href="../assets/css/project.css">
 </head>
 <body>
-  <!-- AI Tutor project detail content goes here -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-brand">JSM</a>
+      <a href="../index.html#projects" class="back-link">&larr; All Projects</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="project-hero">
+      <div class="section-inner">
+        <h1 class="project-title">AI Tutor</h1>
+        <p class="project-context">Scarlet Studio</p>
+        <div class="project-tags">
+          <span class="pill">LLM</span>
+          <span class="pill">Agents</span>
+        </div>
+        <p><a href="https://github.com/jayandhan99/GenAI-Tutor" class="back-link" target="_blank" rel="noopener noreferrer">View Source &rarr;</a></p>
+        <figure class="project-figure">
+          <img src="../assets/img/projects/ai-tutor/api-docs.png" alt="AI Tutor Backend API documentation showing Agent 1, Agent 2, Agent 3, and Full Pipeline endpoints">
+          <figcaption>AI Tutor Backend API</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="project-content">
+      <div class="section-inner">
+        <article class="project-section">
+          <h2>&#129302; Agent Orchestration &amp; Backend APIs</h2>
+          <p class="project-context">Agentic Design &bull; Type Contracts</p>
+          <div class="project-tags">
+            <span class="pill">LangGraph</span>
+            <span class="pill">FastAPI</span>
+            <span class="pill">Supabase</span>
+            <span class="pill">OmniParser v2</span>
+            <span class="pill">Pydantic</span>
+          </div>
+
+          <ul>
+            <li><strong>Agent orchestration (LangChain/LangGraph):</strong> Built a multi-agent &ldquo;Course Builder&rdquo; that converts instructor learning objectives and learner personas into complete syllabi, lesson plans, assessments, and retrieval packs.</li>
+            <li>Implemented RAG over PDFs and screenshots via <strong>OmniParser v2</strong> and used Visual-LLMs for structured table and diagram extraction.</li>
+            <li>Built robust backend APIs with <strong>FastAPI/Pydantic</strong> for multi-agent stages, enforcing typed contracts and structured LLM outputs with JSON fallback parsing.</li>
+            <li>Integrated <strong>Supabase</strong> persistence for attempt-level telemetry and pipeline evaluation.</li>
+          </ul>
+        </article>
+
+        <a href="../index.html#projects" class="back-link project-back">&larr; Back to Portfolio</a>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact" class="contact">
+    <div class="section-inner contact-inner">
+      <div class="contact-links">
+        <a href="mailto:jsenthilmurugan@illinoistech.edu" class="contact-link">jsenthilmurugan@illinoistech.edu</a>
+        <a href="https://github.com/jayandhan99" class="contact-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/jayandhan-senthil-murugan/" class="contact-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </div>
+      <p class="contact-credit">Designed and built by Jayandhan Senthil Murugan</p>
+    </div>
+  </footer>
 
   <script src="../assets/js/main.js" defer></script>
 </body>
