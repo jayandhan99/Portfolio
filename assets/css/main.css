@@ -325,9 +325,9 @@ button {
 
 .profile-photo {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
-  border-radius: 16px;
+  border-radius: 50%;
   border: 1px solid rgb(255 255 255 / 8%);
 }
 
