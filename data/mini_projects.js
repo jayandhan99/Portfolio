@@ -8,8 +8,8 @@ const miniProjects = [
   },
   {
     slug: 'predictive_maintenance',
-    title: 'Predictive Maintenance',
-    tags: ['ML', 'IoT'],
+    title: 'J1939 Telemetry Pipeline',
+    tags: ['Data Engineering', 'IoT'],
     cover: 'assets/img/mini_projects/predictive_maintenance/engine-load-vs-speed.png',
   },
   {
