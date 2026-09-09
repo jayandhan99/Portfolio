@@ -10,6 +10,7 @@ const miniProjects = [
     slug: 'predictive_maintenance',
     title: 'Predictive Maintenance',
     tags: ['ML', 'IoT'],
+    cover: 'assets/img/mini_projects/predictive_maintenance/engine-load-vs-speed.png',
   },
   {
     slug: 'tree_health',

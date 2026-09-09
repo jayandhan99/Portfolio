@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Predictive Maintenance (Mini) — Portfolio</title>
+  <title>Predictive Maintenance — Portfolio</title>
+  <meta name="description" content="A J1939 fleet telemetry pipeline: MF4 CAN bus recordings decoded to Parquet, cataloged in AWS Glue/Athena, and visualized in Grafana.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +17,306 @@
   <link rel="stylesheet" href="../assets/css/project.css">
 </head>
 <body>
-  <!-- Predictive Maintenance mini-project detail content goes here -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-brand">JSM</a>
+      <a href="../index.html#mini-projects" class="back-link">&larr; All Projects</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="project-hero">
+      <div class="section-inner">
+        <h1 class="project-title">J1939 Fleet Telemetry Pipeline</h1>
+        <p class="project-context">MF4 &rarr; DBC Decode &rarr; Parquet &rarr; S3 &rarr; Grafana</p>
+        <div class="project-tags">
+          <span class="pill">ML</span>
+          <span class="pill">IoT</span>
+        </div>
+        <p><a href="../assets/docs/predictive_maintenance/J1939_Pipeline_Documentation.pdf" class="back-link" target="_blank" rel="noopener noreferrer">Download Full Documentation (PDF) &darr;</a></p>
+      </div>
+    </section>
+
+    <section class="project-content">
+      <div class="section-inner">
+        <article class="project-section">
+          <h2>Overview</h2>
+          <p>
+            This project implements a two-step data pipeline for J1939 heavy vehicle telemetry: raw CAN
+            bus recordings (MF4 format) are decoded against a J1939 DBC file and stored as columnar
+            Parquet files in Amazon S3, then queried and visualized in Grafana via Amazon Athena. The
+            pipeline was built and validated end-to-end using CSS Electronics open-source tooling, real
+            J1939 sample data, and AWS cloud infrastructure.
+          </p>
+
+          <h3>What Was Built</h3>
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Step</th>
+                <th>What it does</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Step 1</td>
+                <td>Pull MF4 file from S3 input bucket &rarr; decode using J1939 DBC &rarr; write Parquet files to S3 output bucket, organized by device ID / signal group / date.</td>
+              </tr>
+              <tr>
+                <td>Step 2</td>
+                <td>AWS Glue crawls the Parquet output bucket &rarr; catalogs tables in Athena &rarr; Grafana queries Athena and renders live time-series dashboards.</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+
+        <article class="project-section">
+          <h2>Tech Stack</h2>
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Layer</th>
+                <th>Tool / Service</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Raw data format</td>
+                <td>MF4 (MDF4)</td>
+                <td>Binary CAN bus log format from CANedge hardware</td>
+              </tr>
+              <tr>
+                <td>Signal decoding</td>
+                <td>J1939 DBC + mdf2parquet_decode.exe</td>
+                <td>Translates raw CAN messages to named J1939 signals</td>
+              </tr>
+              <tr>
+                <td>Output format</td>
+                <td>Apache Parquet</td>
+                <td>Columnar format &mdash; efficient for time-series analytics queries</td>
+              </tr>
+              <tr>
+                <td>Cloud storage</td>
+                <td>Amazon S3</td>
+                <td>Input bucket (MF4) + output bucket (Parquet)</td>
+              </tr>
+              <tr>
+                <td>Data catalog</td>
+                <td>AWS Glue Crawler</td>
+                <td>Scans Parquet output and registers tables in Glue catalog</td>
+              </tr>
+              <tr>
+                <td>Query engine</td>
+                <td>Amazon Athena</td>
+                <td>Serverless SQL queries directly on S3 Parquet files</td>
+              </tr>
+              <tr>
+                <td>Visualization</td>
+                <td>Grafana (Docker) + Athena plugin</td>
+                <td>Live time-series dashboards from Athena queries</td>
+              </tr>
+              <tr>
+                <td>Orchestration</td>
+                <td>CSS Electronics canedge-mdftoparquet-automation</td>
+                <td>Open-source pipeline repo connecting all steps</td>
+              </tr>
+              <tr>
+                <td>Local environment</td>
+                <td>Python 3 + venv + boto3</td>
+                <td>Local test runner triggering the Lambda-equivalent logic</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+
+        <article class="project-section">
+          <h2>AWS Infrastructure</h2>
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Resource</th>
+                <th>Name</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>S3 bucket (input)</td>
+                <td>canedge-mf4-input</td>
+                <td>Stores raw MF4 files + DBC file</td>
+              </tr>
+              <tr>
+                <td>S3 bucket (output)</td>
+                <td>canedge-mf4-input-parquet</td>
+                <td>Stores decoded Parquet files</td>
+              </tr>
+              <tr>
+                <td>S3 bucket (Athena)</td>
+                <td>canedge-athena-results</td>
+                <td>Stores Athena query result files</td>
+              </tr>
+              <tr>
+                <td>Glue database</td>
+                <td>canedge_db</td>
+                <td>Holds cataloged table definitions</td>
+              </tr>
+              <tr>
+                <td>Glue crawler</td>
+                <td>canedge-crawler</td>
+                <td>Auto-discovers Parquet schema in S3</td>
+              </tr>
+              <tr>
+                <td>Glue IAM role</td>
+                <td>AWSGlueServiceRole-canedge</td>
+                <td>Grants Glue access to S3 and catalog</td>
+              </tr>
+              <tr>
+                <td>IAM user</td>
+                <td>can-project1</td>
+                <td>Programmatic access for pipeline + Grafana</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>S3 Output Structure</h3>
+          <p>Each MF4 file decoded by the pipeline produces Parquet files organized by device ID, signal group, and date:</p>
+          <div class="code-block"><span class="comment">canedge-mf4-input-parquet/</span>
+  958D2219/                    <span class="comment">← device serial number</span>
+    CAN1_EEC1_S00/              <span class="comment">← J1939 signal group (engine speed)</span>
+      2020/01/13/                <span class="comment">← recording date</span>
+        00002501_00002081.parquet
+    CAN1_CCVS1_S00/             <span class="comment">← J1939 signal group (vehicle speed)</span>
+      2020/01/13/
+        00002501_00002081.parquet</div>
+        </article>
+
+        <article class="project-section">
+          <h2>Grafana Dashboards</h2>
+          <p>Two J1939 signal groups were decoded from the sample data and are queryable in Athena:</p>
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Table</th>
+                <th>J1939 Message</th>
+                <th>Key Signals</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>can1_eec1_s00</td>
+                <td>EEC1</td>
+                <td>enginespeed (RPM) &mdash; engine controller #1</td>
+              </tr>
+              <tr>
+                <td>can1_ccvs1_s00</td>
+                <td>CCVS1</td>
+                <td>wheelbasedvehiclespeed (km/h) &mdash; cruise control / vehicle speed</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Dashboard Queries</h3>
+          <div class="code-block"><span class="comment">-- Engine Speed (RPM)</span>
+<span class="fn">SELECT</span> t, enginespeed <span class="fn">FROM</span> can1_eec1_s00 <span class="fn">ORDER BY</span> t <span class="fn">ASC</span>
+
+<span class="comment">-- Vehicle Speed</span>
+<span class="fn">SELECT</span> t, wheelbasedvehiclespeed <span class="fn">FROM</span> can1_ccvs1_s00 <span class="fn">ORDER BY</span> t <span class="fn">ASC</span></div>
+          <p>
+            Visualization type: time series. Timestamp column: <code>t</code>. Both panels show 13 Jan 2020
+            08:47&ndash;09:00 UTC &mdash; approximately 13 minutes of real truck telemetry from a single
+            CANedge device.
+          </p>
+
+          <div class="image-row image-row-2">
+            <figure class="project-figure">
+              <img src="../assets/img/mini_projects/predictive_maintenance/rpm-speed-correlation.png" alt="Gauge showing an RPM-Speed correlation coefficient of 0.536">
+              <figcaption>RPM&ndash;Speed Correlation Coefficient</figcaption>
+            </figure>
+            <figure class="project-figure">
+              <img src="../assets/img/mini_projects/predictive_maintenance/engine-load-vs-speed.png" alt="Time series chart of engine RPM, vehicle speed, and fault flag for anomaly detection">
+              <figcaption>Engine Load vs. Vehicle Speed &mdash; Anomaly Detection</figcaption>
+            </figure>
+          </div>
+
+          <h3>Findings</h3>
+          <ul>
+            <li><strong>RPM&ndash;Speed Correlation (0.536):</strong> A moderate positive correlation between engine speed and vehicle speed across the recording window. This indicates the truck spent most of the ~13-minute session in low-load or idle conditions rather than active driving &mdash; engine RPM fluctuated fairly independently of vehicle speed, which stayed near zero throughout.</li>
+            <li><strong>Constant fault flag (RPM &gt; 1200 &amp; speed &lt; 5):</strong> The flag was true for nearly the entire window rather than intermittently, revealing that this particular recording is largely idle/stationary time &mdash; not a mix of driving and idling. So a fixed-threshold rule that&rsquo;s meant to catch anomalies just matched the dominant condition instead, which is itself a useful finding: it shows the limits of static thresholds on this kind of dataset and points toward relative (e.g., statistical/z-score) methods as the better fit.</li>
+          </ul>
+        </article>
+
+        <article class="project-section">
+          <h2>How to Reproduce</h2>
+          <div class="pipeline">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                <h3>Clone repo</h3>
+                <div class="code-block">git clone https://github.com/CSS-Electronics/canedge-mdftoparquet-automation.git</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                <h3>Install dependencies and configure AWS</h3>
+                <div class="code-block">pip install -r requirements.txt
+aws configure</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-body">
+                <h3>Upload MF4 files and DBC to S3 input bucket, then run the decoder</h3>
+                <div class="code-block">python run_test.py --cloud Amazon --input-bucket canedge-mf4-input --object-path AABBCCDD/00000001/FILE.MF4</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-body">
+                <h3>Run the Glue crawler to catalog Parquet output</h3>
+                <div class="code-block">aws glue start-crawler --name canedge-crawler --region us-east-1</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">5</div>
+              <div class="step-body">
+                <h3>Start Grafana and query via Athena</h3>
+                <div class="code-block">docker run -d --name grafana -p 3000:3000 \
+  -e AWS_ACCESS_KEY_ID=... \
+  -e AWS_SECRET_ACCESS_KEY=... \
+  -e AWS_DEFAULT_REGION=us-east-1 \
+  grafana/grafana-enterprise</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-section">
+          <h2>Key Observations</h2>
+          <ul>
+            <li>145,534 raw CAN messages per MF4 file decode to ~21,542 named J1939 signals &mdash; a ~7x reduction via DBC filtering.</li>
+            <li>The pipeline auto-organizes output by device ID, signal group, and date &mdash; no manual partitioning needed.</li>
+            <li>Athena enables serverless SQL on S3 Parquet with no database to manage &mdash; query cost scales with data scanned, not uptime.</li>
+            <li>Engine speed (EEC1) and vehicle speed (CCVS1) are the two most diagnostically useful J1939 signals for fleet PdM &mdash; correlated anomalies between these two signals are a primary fault indicator.</li>
+          </ul>
+        </article>
+
+        <a href="../index.html#mini-projects" class="back-link project-back">&larr; Back to Portfolio</a>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact" class="contact">
+    <div class="section-inner contact-inner">
+      <div class="contact-links">
+        <a href="mailto:jsenthilmurugan@illinoistech.edu" class="contact-link">jsenthilmurugan@illinoistech.edu</a>
+        <a href="https://github.com/jayandhan99" class="contact-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/jayandhan-senthil-murugan/" class="contact-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </div>
+      <p class="contact-credit">Designed and built by Jayandhan Senthil Murugan</p>
+    </div>
+  </footer>
 
   <script src="../assets/js/main.js" defer></script>
 </body>

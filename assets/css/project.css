@@ -251,6 +251,8 @@
 }
 
 .step-body {
+  flex: 1 1 auto;
+  min-width: 0;
   padding: 0.5rem 0 2rem;
 }
 
