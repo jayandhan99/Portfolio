@@ -54,55 +54,32 @@
             <thead>
               <tr>
                 <th>Workflow</th>
-                <th>Entry Point</th>
                 <th>What It Does</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>Interactive CLI</td>
-                <td><code>main.py</code></td>
                 <td>Natural-language Q&amp;A routed through specialized intelligence modules (competitor intel, topic extraction, EDGAR analysis) using the configured LLM provider.</td>
               </tr>
               <tr>
                 <td>Publications RAG</td>
-                <td><code>run.py</code></td>
                 <td>Menu-driven ingest &rarr; ask &rarr; compare workflow. Syncs sources, stores chunks in ChromaDB, answers questions with semantic retrieval + LLM synthesis.</td>
               </tr>
               <tr>
                 <td>Web UI</td>
-                <td><code>streamlit_app.py</code></td>
                 <td>Browser dashboard for competitor/date-window ingest, ad-hoc URL ingestion, filtered Q&amp;A, and RAG observability metrics.</td>
               </tr>
               <tr>
                 <td>Competitor digest email</td>
-                <td><code>weekly_emailer/job.py</code></td>
                 <td>Scrapes every competitor source, persists to SQLite, and emails net-new articles since the last successful digest via SMTP.</td>
               </tr>
               <tr>
                 <td>Intelligence Orchestrator</td>
-                <td><code>report_orchestrator.py</code></td>
                 <td>Standalone RSS-to-SQLite pipeline: ingests, deduplicates, fetches full article text, summarizes with Claude, and writes a Markdown report.</td>
               </tr>
             </tbody>
           </table>
-        </article>
-
-        <article class="project-section">
-          <h2>Email Pipeline: v1 &rarr; v2</h2>
-          <p>
-            The digest pipeline went through a real architectural revision. <strong>v1</strong> live-scraped
-            every source at send time, then summarized and sent &mdash; slow, and it kept re-scraping
-            homepages that hadn&rsquo;t changed. <strong>v2</strong> decouples scraping from delivery:
-            articles are scraped and persisted to SQLite first, then a query pulls only what&rsquo;s new
-            since the last successful send, summarizes just that, and records the send timestamp only on
-            success.
-          </p>
-          <p>
-            That makes the send cadence idempotent &mdash; a crash mid-run can&rsquo;t cause duplicate
-            sends or silently dropped articles, because the &ldquo;what&rsquo;s new&rdquo; window is
-            derived from a persisted timestamp, not from in-memory state.
-          </p>
         </article>
 
         <article class="project-section">
