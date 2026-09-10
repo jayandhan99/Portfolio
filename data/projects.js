@@ -12,6 +12,7 @@ const projects = [
     title: 'LabelMark',
     context: 'American Labelmark Company',
     tags: ['ML', 'Time Series'],
+    cover: 'assets/img/projects/labelmark/live-forecast.png',
   },
   {
     slug: 'department_of_growth',

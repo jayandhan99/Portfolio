@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LabelMark — Portfolio</title>
+  <meta name="description" content="Per-department LSTM sales forecasting for American Labelmark Company, driven by freight and economic indicators.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +17,278 @@
   <link rel="stylesheet" href="../assets/css/project.css">
 </head>
 <body>
-  <!-- LabelMark project detail content goes here -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-brand">JSM</a>
+      <a href="../index.html#projects" class="back-link">&larr; All Projects</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="project-hero">
+      <div class="section-inner">
+        <h1 class="project-title">Labelmaster Live Forecast</h1>
+        <p class="project-context">American Labelmark Company</p>
+        <div class="project-tags">
+          <span class="pill">ML</span>
+          <span class="pill">Time Series</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="project-content">
+      <div class="section-inner">
+        <article class="project-section">
+          <h2>Overview</h2>
+          <p>
+            This project forecasts monthly sales for 8 Labelmaster departments using per-department LSTMs,
+            driven by freight/economic indicators and industry mix. Forecasts are generated live from
+            model code and current data &mdash; there&rsquo;s no pre-generated forecast CSV sitting behind
+            the app.
+          </p>
+          <p>
+            <em>Note: this project is covered by an NDA with the client. The screenshots and details below
+            show the modeling approach and the input workflow only &mdash; no forecast output or sales
+            figures are shown.</em>
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Live Forecast App</h2>
+          <p>A Streamlit front end runs the whole pipeline on demand: pick a month, year, and product line(s), and it forecasts straight from the current model and dataset.</p>
+          <div class="image-row image-row-2">
+            <figure class="project-figure">
+              <img src="../assets/img/projects/labelmark/live-forecast.png" alt="Labelmaster Live Forecast app showing month, year, and product line selectors with a Predict Sales button">
+              <figcaption>Live Forecast &mdash; request a one-month prediction</figcaption>
+            </figure>
+            <figure class="project-figure">
+              <img src="../assets/img/projects/labelmark/model-retraining.png" alt="Model retraining panel for uploading an updated dataset and refitting the department LSTM">
+              <figcaption>Model Retraining &mdash; refit on an updated dataset</figcaption>
+            </figure>
+          </div>
+        </article>
+
+        <article class="project-section">
+          <h2>End-to-End Flow</h2>
+          <div class="code-block">Merged_Monthly_Industry.csv
+        │
+        ▼
+  Preprocess (dept feature list, date cut, impute)
+        │
+        ▼
+  Feature eng (log target, seasonality, rolls, best FTR lags;
+               optional industry weights)
+        │
+        ├──── train ──► LSTM(64→32→Dense→22) + scalers
+        │
+        └──── forecast ► last 12 months → 22-step vector
+                              │
+                              ▼
+                    wide CSV / Streamlit UI</div>
+        </article>
+
+        <article class="project-section">
+          <h2>Data Preparation</h2>
+          <p>
+            Source: <code>data/raw/Merged_Monthly_Industry.csv</code> &mdash; monthly sales by department
+            plus freight corridors, Cass/TCI/ICI indexes, trailer metrics, employment/income, and industry
+            mix columns. Two parallel preprocessing paths handle departments with and without industry
+            weighting:
+          </p>
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Path</th>
+                <th>Modules</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>with_weights</td>
+                <td><code>preprocessing_with_weights.py</code> + industry columns</td>
+              </tr>
+              <tr>
+                <td>without_weights</td>
+                <td><code>preprocessing_without_weights.py</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <p>Shared steps:</p>
+          <ul>
+            <li>Load CSV, clean &ldquo;Average of &rdquo; prefixes, parse dates</li>
+            <li>Filter to the ~2003-01 &rarr; 2025-05 window</li>
+            <li>Keep department-specific feature lists</li>
+            <li>Drop zero/NaN targets; impute (0 for some columns, forward/backward-fill for the rest)</li>
+          </ul>
+        </article>
+
+        <article class="project-section">
+          <h2>Feature Engineering</h2>
+          <p>Main entry point: <code>prepare_lstm_ftr_features(...)</code>.</p>
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Step</th>
+                <th>What It Does</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Target transform</td>
+                <td><code>y_model = log1p(sales)</code></td>
+              </tr>
+              <tr>
+                <td>Calendar</td>
+                <td><code>sin_month</code> / <code>cos_month</code></td>
+              </tr>
+              <tr>
+                <td>Autoregressive</td>
+                <td><code>lag_12</code>, <code>roll_3</code>, <code>roll_6</code>, trend index</td>
+              </tr>
+              <tr>
+                <td>Freight lags (most depts)</td>
+                <td>Lags 1&ndash;3 on freight indicators; keep the best lag by correlation with the log target</td>
+              </tr>
+              <tr>
+                <td>Industry-growth-only depts</td>
+                <td>No freight lags &mdash; industry growth path only</td>
+              </tr>
+              <tr>
+                <td>Scaling</td>
+                <td>StandardScaler on features</td>
+              </tr>
+              <tr>
+                <td>with_weights only</td>
+                <td>Multiply industry columns by department weights</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>Departments route to one of the two preprocessing/feature paths above depending on whether industry weighting applies to that department.</p>
+        </article>
+
+        <article class="project-section">
+          <h2>LSTM Model Architecture</h2>
+          <p>One Keras model per department (and per weighting variant):</p>
+          <div class="code-block">Input(lookback=12, n_features)
+  → LSTM(64, return_sequences=True)
+  → Dropout(0.2)
+  → LSTM(32)
+  → Dropout(0.2)
+  → Dense(32, relu)
+  → Dense(horizon=22)   # direct multi-step output</div>
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Hyperparameter</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Lookback</td>
+                <td>12 months</td>
+              </tr>
+              <tr>
+                <td>Horizon</td>
+                <td>22 months (one forward pass, not recursive)</td>
+              </tr>
+              <tr>
+                <td>Optimizer</td>
+                <td>Adam, lr=1e-3</td>
+              </tr>
+              <tr>
+                <td>Loss</td>
+                <td>MSE</td>
+              </tr>
+              <tr>
+                <td>Epochs / batch</td>
+                <td>80 / 16</td>
+              </tr>
+              <tr>
+                <td>Callbacks</td>
+                <td>EarlyStopping(10), ReduceLROnPlateau, ModelCheckpoint</td>
+              </tr>
+              <tr>
+                <td>Target path</td>
+                <td>log1p &rarr; MinMaxScaler &rarr; predict &rarr; inverse &rarr; expm1</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            There is no ensemble of LSTM + XGBoost + Prophet in the live path &mdash; XGBoost and Prophet
+            are listed as install dependencies but aren&rsquo;t used in production forecasting.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Training vs. Inference</h2>
+          <p>
+            <strong>Train:</strong> routes by department, builds features, windows them into sequences,
+            fits the model, and saves the model plus its scalers.
+          </p>
+          <p>
+            <strong>Forecast:</strong> takes the last 12 feature rows, runs one LSTM pass to produce a
+            22-month vector per department, then joins departments into a single wide table keyed by date.
+            Optional 95% intervals use holdout residual variance when those files are available.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Evaluation</h2>
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Area</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Metrics</td>
+                <td>MAE, RMSE, WAPE, bias, MAPE</td>
+              </tr>
+              <tr>
+                <td>Backtest</td>
+                <td>Rolling-origin cross-validation folds</td>
+              </tr>
+              <tr>
+                <td>Error analysis</td>
+                <td>Offline bias/error analysis against a seasonal-na&iuml;ve baseline</td>
+              </tr>
+              <tr>
+                <td>Train scripts</td>
+                <td>Holdout cutoff around 2022-10-31 when enabled</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+
+        <article class="project-section">
+          <h2>Mental Model</h2>
+          <p>
+            The with/without-weights LSTM stack, the forecast joiner, and the Streamlit app are the
+            production path. An older config-driven CLI scaffold (different lag/MoM/YoY setup and LSTM
+            parameters) exists in parallel but isn&rsquo;t fully aligned with the live engines &mdash; a
+            reminder that a codebase can carry more than one generation of the same idea, and knowing which
+            one is actually load-bearing matters as much as building it in the first place.
+          </p>
+        </article>
+
+        <a href="../index.html#projects" class="back-link project-back">&larr; Back to Portfolio</a>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact" class="contact">
+    <div class="section-inner contact-inner">
+      <div class="contact-links">
+        <a href="mailto:jsenthilmurugan@illinoistech.edu" class="contact-link">jsenthilmurugan@illinoistech.edu</a>
+        <a href="https://github.com/jayandhan99" class="contact-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/jayandhan-senthil-murugan/" class="contact-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </div>
+      <p class="contact-credit">Designed and built by Jayandhan Senthil Murugan</p>
+    </div>
+  </footer>
 
   <script src="../assets/js/main.js" defer></script>
 </body>
