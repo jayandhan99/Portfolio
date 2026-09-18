@@ -206,6 +206,40 @@
   }
 
   /* --------------------------------------------------------------------
+     Certification carousel: auto-scrolls, but native overflow scrolling
+     stays live so a hover/touch can freely browse instead of just pausing.
+     -------------------------------------------------------------------- */
+  function initCertCarousel() {
+    const row = document.getElementById('certRow');
+    const track = row ? row.querySelector('.cert-track') : null;
+    if (!row || !track) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const speed = 0.4; // pixels per animation frame
+    let paused = false;
+
+    function step() {
+      if (!paused) {
+        const halfWidth = track.scrollWidth / 2;
+        row.scrollLeft += speed;
+        if (row.scrollLeft >= halfWidth) {
+          row.scrollLeft -= halfWidth;
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    row.addEventListener('mouseenter', () => { paused = true; });
+    row.addEventListener('mouseleave', () => { paused = false; });
+    row.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+    row.addEventListener('touchend', () => { paused = false; });
+    row.addEventListener('focusin', () => { paused = true; });
+    row.addEventListener('focusout', () => { paused = false; });
+
+    requestAnimationFrame(step);
+  }
+
+  /* --------------------------------------------------------------------
      Skills
      -------------------------------------------------------------------- */
   function renderSkills() {
@@ -264,6 +298,7 @@
     renderProjects();
     renderMiniProjects();
     renderCertifications();
+    initCertCarousel();
     renderSkills();
     initProjectFilters();
     initCursorTrail();
