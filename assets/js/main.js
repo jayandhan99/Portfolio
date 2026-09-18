@@ -156,12 +156,20 @@
     if (!row || typeof certifications === 'undefined') return;
 
     certifications.forEach((cert) => {
-      const item = document.createElement('div');
+      const item = document.createElement('a');
       item.className = 'cert-card';
+      item.href = cert.image;
+      item.target = '_blank';
+      item.rel = 'noopener noreferrer';
 
-      const badge = document.createElement('div');
-      badge.className = 'cert-badge';
-      badge.setAttribute('aria-hidden', 'true');
+      const img = document.createElement('img');
+      img.className = 'cert-image';
+      img.src = cert.image;
+      img.alt = `${cert.name} certificate`;
+      img.loading = 'lazy';
+
+      const body = document.createElement('div');
+      body.className = 'cert-body';
 
       const name = document.createElement('h3');
       name.className = 'cert-name';
@@ -175,10 +183,12 @@
       date.className = 'cert-date';
       date.textContent = cert.date;
 
-      item.appendChild(badge);
-      item.appendChild(name);
-      item.appendChild(issuer);
-      item.appendChild(date);
+      body.appendChild(name);
+      body.appendChild(issuer);
+      body.appendChild(date);
+
+      item.appendChild(img);
+      item.appendChild(body);
       row.appendChild(item);
     });
   }

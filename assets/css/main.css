@@ -446,21 +446,31 @@ button {
 }
 
 .cert-card {
+  display: block;
   flex: 0 0 auto;
   scroll-snap-align: start;
-  width: 220px;
+  width: 240px;
   background: var(--color-surface);
   border: 1px solid rgb(255 255 255 / 6%);
   border-radius: 12px;
-  padding: 1.25rem;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
-.cert-badge {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  margin-bottom: 1rem;
-  background: linear-gradient(135deg, var(--color-accent), rgb(56 182 255 / 30%));
+.cert-card:hover {
+  transform: translateY(-4px);
+  border-color: rgb(56 182 255 / 30%);
+}
+
+.cert-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: #fff;
+}
+
+.cert-body {
+  padding: 1rem 1.25rem 1.25rem;
 }
 
 .cert-name {
