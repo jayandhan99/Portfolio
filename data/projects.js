@@ -1,11 +1,13 @@
 // Project data consumed by index.html.
 // Each `tag` doubles as a filter category value shown in the Projects filter bar.
+// Optional `status`: 'ongoing' | 'soon' shows a badge on the card.
 const projects = [
   {
     slug: 'predictive_maintenance',
     title: 'Predictive Maintenance',
     context: 'Personal Project',
     tags: ['ML', 'IoT'],
+    status: 'ongoing',
   },
   {
     slug: 'labelmark',
@@ -33,6 +35,7 @@ const projects = [
     title: 'GAIA',
     context: 'Personal Project',
     tags: ['Data Engineering'],
+    status: 'soon',
   },
   {
     slug: 'biomarkers',

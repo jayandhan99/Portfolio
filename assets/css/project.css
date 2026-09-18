@@ -134,6 +134,29 @@
   margin-top: 2.5rem;
 }
 
+.status-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  background: var(--color-surface);
+  border: 1px dashed rgb(255 255 255 / 18%);
+  border-radius: 12px;
+  padding: 1.75rem;
+}
+
+.status-notice-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.status-notice h2 {
+  margin-bottom: 0.5rem;
+}
+
+.status-notice p {
+  margin-bottom: 0;
+}
+
 .text-accent {
   color: var(--color-accent);
 }

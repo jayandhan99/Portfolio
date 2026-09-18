@@ -375,7 +375,55 @@ button {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  background: rgb(10 15 30 / 85%);
+  border: 1px solid rgb(255 255 255 / 15%);
+  color: var(--color-text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.status-badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-muted);
+}
+
+.status-badge.status-ongoing::before {
+  background: var(--color-success);
+  animation: status-pulse 2s ease-out infinite;
+}
+
+@keyframes status-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(39 174 96 / 60%);
+  }
+
+  70% {
+    box-shadow: 0 0 0 7px rgb(39 174 96 / 0%);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgb(39 174 96 / 0%);
+  }
+}
+
+.card .status-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
 .card {
+  position: relative;
   display: block;
   background: var(--color-surface);
   border-radius: 12px;

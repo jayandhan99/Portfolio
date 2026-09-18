@@ -85,6 +85,11 @@
   /* --------------------------------------------------------------------
      Card rendering (shared by Projects and Mini Projects)
      -------------------------------------------------------------------- */
+  const STATUS_LABELS = {
+    ongoing: 'Ongoing project',
+    soon: 'Updating soon',
+  };
+
   function createCard(item, basePath) {
     const card = document.createElement('a');
     card.className = 'card';
@@ -133,6 +138,14 @@
 
     card.appendChild(cover);
     card.appendChild(body);
+
+    if (item.status && STATUS_LABELS[item.status]) {
+      const badge = document.createElement('span');
+      badge.className = `status-badge status-${item.status}`;
+      badge.textContent = STATUS_LABELS[item.status];
+      card.appendChild(badge);
+    }
+
     return card;
   }
 
