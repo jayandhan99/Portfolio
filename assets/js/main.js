@@ -151,46 +151,58 @@
   /* --------------------------------------------------------------------
      Certifications
      -------------------------------------------------------------------- */
+  function createCertCard(cert) {
+    const item = document.createElement('a');
+    item.className = 'cert-card';
+    item.href = cert.image;
+    item.target = '_blank';
+    item.rel = 'noopener noreferrer';
+
+    const img = document.createElement('img');
+    img.className = 'cert-image';
+    img.src = cert.image;
+    img.alt = `${cert.name} certificate`;
+    img.loading = 'lazy';
+
+    const body = document.createElement('div');
+    body.className = 'cert-body';
+
+    const name = document.createElement('h3');
+    name.className = 'cert-name';
+    name.textContent = cert.name;
+
+    const issuer = document.createElement('p');
+    issuer.className = 'cert-issuer';
+    issuer.textContent = cert.issuer;
+
+    const date = document.createElement('p');
+    date.className = 'cert-date';
+    date.textContent = cert.date;
+
+    body.appendChild(name);
+    body.appendChild(issuer);
+    body.appendChild(date);
+
+    item.appendChild(img);
+    item.appendChild(body);
+    return item;
+  }
+
   function renderCertifications() {
     const row = document.getElementById('certRow');
-    if (!row || typeof certifications === 'undefined') return;
+    if (!row || typeof certifications === 'undefined' || certifications.length === 0) return;
 
-    certifications.forEach((cert) => {
-      const item = document.createElement('a');
-      item.className = 'cert-card';
-      item.href = cert.image;
-      item.target = '_blank';
-      item.rel = 'noopener noreferrer';
+    const track = document.createElement('div');
+    track.className = 'cert-track';
 
-      const img = document.createElement('img');
-      img.className = 'cert-image';
-      img.src = cert.image;
-      img.alt = `${cert.name} certificate`;
-      img.loading = 'lazy';
+    // Render the list twice back-to-back so the scroll animation can loop seamlessly.
+    for (let pass = 0; pass < 2; pass++) {
+      certifications.forEach((cert) => {
+        track.appendChild(createCertCard(cert));
+      });
+    }
 
-      const body = document.createElement('div');
-      body.className = 'cert-body';
-
-      const name = document.createElement('h3');
-      name.className = 'cert-name';
-      name.textContent = cert.name;
-
-      const issuer = document.createElement('p');
-      issuer.className = 'cert-issuer';
-      issuer.textContent = cert.issuer;
-
-      const date = document.createElement('p');
-      date.className = 'cert-date';
-      date.textContent = cert.date;
-
-      body.appendChild(name);
-      body.appendChild(issuer);
-      body.appendChild(date);
-
-      item.appendChild(img);
-      item.appendChild(body);
-      row.appendChild(item);
-    });
+    row.appendChild(track);
   }
 
   /* --------------------------------------------------------------------
