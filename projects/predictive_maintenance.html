@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Predictive Maintenance — Portfolio</title>
-  <meta name="description" content="Predictive Maintenance is an ongoing project. A full write-up will be added as it progresses.">
+  <meta name="description" content="Predicting truck component failure on the SCANIA Component X dataset in Alteryx — finding and removing two label leaks, handling a 9.65% positive rate, and tuning the decision threshold.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,7 +28,7 @@
     <section class="project-hero">
       <div class="section-inner">
         <h1 class="project-title">Predictive Maintenance</h1>
-        <p class="project-context">Personal Project</p>
+        <p class="project-context">Personal Project &mdash; SCANIA Component X</p>
         <div class="project-tags">
           <span class="pill">ML</span>
           <span class="pill">IoT</span>
@@ -40,11 +40,332 @@
     <section class="project-content">
       <div class="section-inner">
         <article class="project-section">
+          <h2>Overview</h2>
+          <p>
+            Heavy vehicles log thousands of sensor readouts over their service life, and somewhere in that
+            history is the signal that a component is on its way out. This project builds a predictive
+            maintenance pipeline in <strong>Alteryx Designer</strong> on the <strong>SCANIA Component X</strong>
+            dataset, predicting <code>in_study_repair</code> &mdash; whether a truck fails within the study
+            window &mdash; from 420 aggregated sensor features.
+          </p>
+          <div class="callout-box">
+            <div class="callout-label">PROBLEM STATEMENT</div>
+            <p>
+              Only <strong>9.65%</strong> of trucks fail during the study (2,272 failures against 21,278
+              non-failures). A model that predicts &ldquo;no failure&rdquo; for every truck is 90% accurate
+              and completely worthless. The real work is not fitting a model &mdash; it is making sure the
+              model is learning from sensor behaviour rather than from the label, and then choosing an
+              operating point where catching failures actually matters more than looking accurate.
+            </p>
+          </div>
+          <p>
+            The interesting part of this project turned out to be the debugging: two label leaks that made
+            the model look perfect, an imbalance correction that had to be confined to the training branch,
+            and a decision threshold that the default 0.5 cutoff gets badly wrong.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Data Understanding</h2>
+          <p>
+            The raw data arrives as three files at different grains. <code>train_tte.csv</code> is one row per
+            truck and carries the time-to-event label. <code>train_operational_readouts.csv</code> is one row
+            per truck <em>per time step</em>, holding the sensor counters.
+            <code>train_specifications.csv</code> holds static truck specs.
+          </p>
+          <p>
+            A Decision Tree trained on the specification columns alone <strong>found no splits at all</strong>,
+            so specs were ruled out as standalone predictors early. The signal is in the readouts &mdash;
+            which is also where all the awkwardness lives.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Exploring and Reshaping the Readouts</h2>
+          <p>
+            The readouts cannot be modelled in the shape they arrive in. 105 of the sensor columns are
+            <code>V_String</code> fields storing histogram-encoded strings, and every truck has a different
+            number of readings, so there is no fixed-length vector to hand a tree model.
+          </p>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/predictive_maintenance/alteryx-operational-explore.png" alt="Alteryx exploration workflow profiling the operational readouts, then transposing, summarizing and cross-tabbing them into wide per-truck features">
+            <figcaption>Exploration workflow &mdash; profiling branches, then the transpose / summarize / cross-tab reshape</figcaption>
+          </figure>
+          <p>
+            Two Summarize branches hang directly off the input purely to profile it &mdash; one of them
+            chained, counting readings per truck and then summarizing that distribution. That is where the
+            <strong>5 to 303 readings per truck</strong> range came from, and it is what ruled out treating
+            the readouts as a fixed-width time series.
+          </p>
+          <p>
+            The main branch solves the shape problem with a transpose-aggregate-pivot pattern rather than
+            hand-writing hundreds of aggregation rules:
+          </p>
+          <div class="pipeline">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                <h3>Transpose to long format</h3>
+                <p>After Data Cleansing and a Select, a Transpose folds every sensor column into name/value rows &mdash; so one rule can be applied to all 105 sensors at once, regardless of how many there are.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                <h3>Aggregate every sensor in one pass</h3>
+                <p>A Summarize grouped by truck and sensor computes <strong>Min, Max, Avg and StdDev</strong> &mdash; collapsing each truck&rsquo;s variable-length history into four numbers per sensor.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-body">
+                <h3>Build the feature names</h3>
+                <p>A second Transpose puts each statistic on its own row, and a Formula concatenates the statistic with the sensor it came from &mdash; producing names like <code>Max_272_0</code> and <code>StdDev_158_9</code>, the ones that later surface at the top of the variable importance ranking.</p>
+                <div class="code-block">column_name = [Name] + '_' + [Name2]</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-body">
+                <h3>Cross Tab back to wide</h3>
+                <p>A Cross Tab pivots those generated names back into columns, producing <strong>420 features</strong> at one row per truck.</p>
+              </div>
+            </div>
+          </div>
+          <p>
+            The payoff is that nothing in this branch is hardcoded to a sensor count. Add or drop sensors
+            upstream and the feature table regenerates itself.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Building the Modelling Table</h2>
+          <p>
+            With features at one row per truck, the last preparation step is attaching the label from the
+            time-to-event file.
+          </p>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/predictive_maintenance/alteryx-data-prep.png" alt="Alteryx workflow joining train_tte.csv with the aggregated operational readouts and writing the cleaned modelling table">
+            <figcaption>Data preparation workflow &mdash; aggregated readouts joined to the time-to-event labels</figcaption>
+          </figure>
+          <p>
+            The aggregated readouts are joined to <code>train_tte.csv</code> on the truck key, attaching
+            <code>in_study_repair</code> to every feature row, and a final Select trims the result. The
+            modelling table comes out at <strong>422 columns &times; 23,550 rows</strong> &mdash; the single
+            input every downstream workflow reads.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Leakage Detection and Removal</h2>
+          <p>
+            The first models scored close to <strong>100% accuracy and F1</strong>. On a problem with a 9.65%
+            positive rate, that is not a result &mdash; it is a bug. Variable Importance plots found two
+            predictors that were encoding the answer.
+          </p>
+          <div class="cost-grid">
+            <div class="cost-card bad">
+              <div class="verdict">LEAK 1</div>
+              <h3><code>weight</code></h3>
+              <p>The class-weighting column <code>IIF(in_study_repair='1', 9.36, 1)</code> was mistakenly fed in as a <strong>predictor</strong> rather than used as a case-weight parameter &mdash; a near-direct encoding of the label. It dominated Gini importance at roughly 480&ndash;900 whenever it was present.</p>
+            </div>
+            <div class="cost-card bad">
+              <div class="verdict">LEAK 2</div>
+              <h3><code>length_of_study_time_step</code></h3>
+              <p>Leaky by construction: observation length is truncated at failure for repaired trucks, so the field encodes the outcome through the <em>study design</em> rather than through the truck&rsquo;s actual condition.</p>
+            </div>
+          </div>
+          <p>
+            Both were removed from every predictor set. Headline metrics collapsed from a fake 100% down to
+            honest numbers in the 60&ndash;90% range &mdash; <strong>a deliberate, correct regression, not a
+            failure.</strong> A model that predicts using disguised versions of its own label looks perfect
+            in testing and is useless on any truck the study has not already resolved.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Handling the Imbalance</h2>
+          <p>
+            Trained naively on 90/10 data, every model collapses to predicting &ldquo;no failure&rdquo; for
+            everyone. Alteryx&rsquo;s Random Forest has no native case-weight parameter, so the correction is
+            applied by <strong>oversampling the minority class</strong> &mdash; but only in the training
+            branch.
+          </p>
+          <p>
+            Create Samples splits the data <strong>70/15/15</strong> into Estimation, Validation and Holdout
+            <em>first</em>, and oversampling is applied to the E branch only. Doing it in the other order
+            would duplicate rows across the splits and leak training records into evaluation. Validation and
+            Holdout keep the real-world class balance, which is what keeps the numbers honest.
+          </p>
+          <p>
+            Decision Tree <em>does</em> support native sampling weights, so both variants were tested &mdash;
+            a weighted tree and an oversampled tree &mdash; to compare the two corrections directly.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Model Comparison</h2>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/predictive_maintenance/alteryx-model-selection.png" alt="Alteryx workflow profiling the modelling table, sampling, and training two Decision Tree variants alongside a Forest Model">
+            <figcaption>Model selection &mdash; two Decision Tree variants and a Forest Model from the same samples</figcaption>
+          </figure>
+          <p>Measured on the untouched Validation sample:</p>
+          <div class="table-scroll">
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>F1</th>
+                <th>AUC</th>
+                <th>Acc_0</th>
+                <th>Acc_1</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="best">
+                <td>Random Forest</td>
+                <td>0.275</td>
+                <td>0.728</td>
+                <td>0.566</td>
+                <td>0.778</td>
+              </tr>
+              <tr>
+                <td>Decision Tree (weighted)</td>
+                <td>0.251</td>
+                <td>0.641</td>
+                <td>0.612</td>
+                <td>0.640</td>
+              </tr>
+              <tr>
+                <td>Decision Tree (oversampled)</td>
+                <td>0.219</td>
+                <td>0.664</td>
+                <td>0.274</td>
+                <td>0.919</td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+          <p>
+            <strong>Random Forest wins on both F1 and AUC</strong>, and its Precision-Recall and ROC curves
+            dominate both tree variants across nearly the full range &mdash; not a marginal win that could
+            flip on a different split.
+          </p>
+          <p>
+            The oversampled Decision Tree&rsquo;s 0.919 on Acc_1 is a trap, not a strength. It was flagging
+            failures indiscriminately, and Acc_0 collapsed to 0.274 as a result. Comparing models on
+            threshold-independent metrics like AUC and PR curve shape &mdash; <em>before</em> touching the
+            threshold &mdash; is what keeps &ldquo;which model is better&rdquo; from being confused with
+            &ldquo;which threshold got luckier.&rdquo;
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Holdout Evaluation and Probability Recalibration</h2>
+          <figure class="project-figure">
+            <img src="../assets/img/projects/predictive_maintenance/alteryx-random-forest.png" alt="Alteryx workflow training the Forest Model, scoring the holdout sample with oversampling correction, and sweeping the classification threshold">
+            <figcaption>Final Random Forest workflow &mdash; holdout scoring with recalibration, plus the threshold sweep</figcaption>
+          </figure>
+          <p>
+            A forest trained on oversampled data has learned an artificial ~50/50 world, so its raw output
+            probabilities are biased toward failure. Before scoring the Holdout sample, the Score tool&rsquo;s
+            <strong>oversampling-correction</strong> option rescales those probabilities back to real-world
+            prevalence (target <code>in_study_repair</code>, value <code>1</code>, original
+            <code>9.65%</code>).
+          </p>
+          <p>
+            The confusion matrix is then computed manually through a Formula &rarr; Summarize &rarr; metric
+            pipeline, because Alteryx&rsquo;s Model Comparison tool recalculates its own probabilities from
+            the raw model object and would silently discard the corrected scores.
+          </p>
+        </article>
+
+        <article class="project-section">
+          <h2>Decision Threshold Tuning</h2>
+          <p>
+            With calibrated probabilities on held-out trucks, the last question is where to draw the line.
+            Nine thresholds from 0.10 to 0.50 were swept in a single pass &mdash; a Text Input of candidate
+            values, cross-joined onto every scored record with Append Fields, then classified and summarized:
+          </p>
+          <div class="code-block">Predicted_Class = IIF([Score_1] &gt;= [Threshold], 1, 0)</div>
+
+          <div class="metric-hero">
+            <div class="metric-big">
+              <div class="metric-label">CHOSEN THRESHOLD</div>
+              <div class="metric-value">0.20</div>
+              <div class="metric-sub">F1 peak on holdout</div>
+            </div>
+            <div class="metric-matrix">
+              <h3>Operating Point Comparison</h3>
+              <table class="matrix-table">
+                <thead>
+                  <tr>
+                    <th>Threshold</th>
+                    <th>Accuracy</th>
+                    <th>Recall</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="row-label">0.50 (default)</td>
+                    <td>90.6%</td>
+                    <td class="fn">5.2%<span class="cell-note">Misses 95% of failures</span></td>
+                  </tr>
+                  <tr>
+                    <td class="row-label">0.20 (chosen)</td>
+                    <td>80.1%</td>
+                    <td class="tp">46.2%<span class="cell-note">Nine times more failures caught</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p>
+            At the chosen 0.20 cutoff the full picture is <strong>80.1% accuracy, 22.2% precision, 46.2%
+            recall, 30.0% F1</strong> &mdash; the point at which F1 peaks across the sweep.
+          </p>
+
+          <div class="callout-box">
+            <div class="callout-label">WHY THE DEFAULT FAILS</div>
+            <p>
+              At the default 0.5 cutoff the model reports <strong>90.6% accuracy</strong> while recall
+              collapses to <strong>5.2%</strong> &mdash; it would miss 95% of real failures. Giving up ten
+              points of accuracy to move from 5.2% to 46.2% recall is the entire point of the exercise: a
+              false alarm costs an unnecessary inspection, a missed failure costs a roadside breakdown.
+            </p>
+          </div>
+        </article>
+
+        <article class="project-section">
+          <h2>Honest Limitations</h2>
+          <p>
+            This is a defensible first baseline, not a production system. What it does not yet do:
+          </p>
+          <ul>
+            <li><strong>Recall is still only 46.2%</strong> at the chosen operating point &mdash; the model misses more than half of actual failures. Acceptable as an honest baseline; not yet good enough for a domain where missed failures are expensive.</li>
+            <li><strong>A legitimate signal was thrown away.</strong> <code>length_of_study_time_step</code> was dropped rather than reframed &mdash; truck maturity is real information, but the leaky version could not be salvaged as-is.</li>
+            <li><strong>Aggregation discards temporal structure.</strong> Min/Max/Avg/StdDev means a truck with a sudden late-stage spike and one with a slow steady rise can produce identical feature vectors.</li>
+            <li><strong>Only two model families</strong> were tried, at default hyperparameters, with no feature selection beyond the aggregation statistics.</li>
+            <li><strong>The binary framing is a simplification.</strong> Collapsing to <code>in_study_repair</code> discards the richer imminence labels and ignores that failure <em>timing</em> is itself informative.</li>
+          </ul>
+        </article>
+
+        <article class="project-section">
           <div class="status-notice">
             <div class="status-notice-icon" aria-hidden="true">&#128679;</div>
             <div>
-              <h2>This is an ongoing project</h2>
-              <p>I&rsquo;m still actively building this one. The full write-up &mdash; approach, results, and lessons learned &mdash; will be added here as the work progresses.</p>
+              <h2>Where this stands</h2>
+              <p>
+                The classification cycle runs end to end: prepared data, leak-free predictors, a compared and
+                selected model, recalibrated probabilities, and a justified operating point. Next up is a
+                <strong>feature importance write-up</strong> of the top sensors
+                (<code>Max_272_0</code>, <code>Max_158_9</code>, <code>StdDev_158_9</code>), a
+                <strong>spec-group failure-rate analysis</strong>, and a <strong>usable scoring
+                artifact</strong> that takes a new truck&rsquo;s sensor data and returns a risk score rather
+                than a static report. Reframing the threshold around explicit inspection-versus-breakdown
+                costs, and a later survival-modelling pass (Cox proportional hazards) that uses the
+                time-to-event data properly instead of discarding it, are the documented follow-ups.
+              </p>
             </div>
           </div>
         </article>

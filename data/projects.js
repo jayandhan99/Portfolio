@@ -7,6 +7,7 @@ const projects = [
     title: 'Predictive Maintenance',
     context: 'Personal Project',
     tags: ['ML', 'IoT'],
+    cover: 'assets/img/projects/predictive_maintenance/alteryx-random-forest.png',
     status: 'ongoing',
   },
   {
