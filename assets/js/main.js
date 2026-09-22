@@ -24,61 +24,80 @@
   }
 
   /* --------------------------------------------------------------------
-     Hero cursor trail: glowing dot + fading trail on the hero canvas.
+     Nav: solid-ish background once the page scrolls, and highlight the
+     link for whichever section is currently in view.
      -------------------------------------------------------------------- */
-  function initCursorTrail() {
-    const hero = document.getElementById('hero');
-    const canvas = document.getElementById('cursorTrail');
-    if (!hero || !canvas || !canvas.getContext) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (window.matchMedia('(pointer: coarse)').matches) return;
+  function initNavState() {
+    const nav = document.querySelector('.nav');
+    if (!nav) return;
 
-    const ctx = canvas.getContext('2d');
-    let points = [];
-    let rafId = null;
+    const onScroll = () => nav.classList.toggle('is-scrolled', window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
 
-    function resizeCanvas() {
-      canvas.width = hero.clientWidth;
-      canvas.height = hero.clientHeight;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    if (!('IntersectionObserver' in window)) return;
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      points.forEach((p) => {
-        p.life -= 0.035;
-      });
-      points = points.filter((p) => p.life > 0);
-
-      points.forEach((p) => {
-        const glowRadius = 22 * p.life;
-        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowRadius);
-        gradient.addColorStop(0, `rgba(56, 182, 255, ${0.5 * p.life})`);
-        gradient.addColorStop(1, 'rgba(56, 182, 255, 0)');
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, glowRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = `rgba(226, 232, 240, ${p.life})`;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 2.5 * p.life, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      rafId = points.length > 0 ? requestAnimationFrame(draw) : null;
-    }
-
-    hero.addEventListener('mousemove', (e) => {
-      const rect = hero.getBoundingClientRect();
-      points.push({ x: e.clientX - rect.left, y: e.clientY - rect.top, life: 1 });
-      if (!rafId) rafId = requestAnimationFrame(draw);
+    // The mini-projects section belongs to the Projects nav item.
+    const linkFor = { 'mini-projects': 'projects' };
+    const links = new Map();
+    document.querySelectorAll('.nav-menu .nav-link[href^="#"]').forEach((link) => {
+      links.set(link.getAttribute('href').slice(1), link);
     });
 
-    hero.addEventListener('mouseleave', () => {
-      points = [];
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const key = linkFor[entry.target.id] || entry.target.id;
+        links.forEach((link, id) => link.classList.toggle('is-active', id === key));
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+
+    // The hero has no nav link, so observing it clears the highlight at the top of the page.
+    ['hero', 'about', 'projects', 'mini-projects', 'certifications', 'skills'].forEach((id) => {
+      const section = document.getElementById(id);
+      if (section) spy.observe(section);
+    });
+  }
+
+  /* --------------------------------------------------------------------
+     Scroll reveal: fade/slide elements in as they enter the viewport.
+     -------------------------------------------------------------------- */
+  function initReveal() {
+    const items = document.querySelectorAll('.reveal');
+    if (!items.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+      items.forEach((el) => el.classList.add('is-visible'));
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        el.classList.add('is-visible');
+        observer.unobserve(el);
+        // Once faded in, drop the reveal transition so it can't override hover transitions.
+        setTimeout(() => el.classList.remove('reveal', 'is-visible'), 1200);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+
+    items.forEach((el) => observer.observe(el));
+  }
+
+  /* --------------------------------------------------------------------
+     Hero counters, derived from the data files so they never go stale.
+     -------------------------------------------------------------------- */
+  function renderHeroStats() {
+    const counts = {
+      projects: typeof projects === 'undefined' ? null : projects.length,
+      miniProjects: typeof miniProjects === 'undefined' ? null : miniProjects.length,
+      certifications: typeof certifications === 'undefined' ? null : certifications.length,
+    };
+
+    document.querySelectorAll('[data-stat]').forEach((el) => {
+      const value = counts[el.dataset.stat];
+      if (value !== null && value !== undefined) el.textContent = String(value);
     });
   }
 
@@ -90,9 +109,10 @@
     soon: 'Updating soon',
   };
 
-  function createCard(item, basePath) {
+  function createCard(item, basePath, index) {
     const card = document.createElement('a');
-    card.className = 'card';
+    card.className = 'card reveal';
+    card.style.setProperty('--i', String(index % 3));
     card.href = `${basePath}/${item.slug}.html`;
     card.dataset.tags = (item.tags || []).join(',');
 
@@ -114,10 +134,21 @@
     const body = document.createElement('div');
     body.className = 'card-body';
 
+    const head = document.createElement('div');
+    head.className = 'card-head';
+
     const title = document.createElement('h3');
     title.className = 'card-title';
     title.textContent = item.title;
-    body.appendChild(title);
+    head.appendChild(title);
+
+    const arrow = document.createElement('span');
+    arrow.className = 'card-arrow';
+    arrow.setAttribute('aria-hidden', 'true');
+    arrow.textContent = '↗';
+    head.appendChild(arrow);
+
+    body.appendChild(head);
 
     if (item.context) {
       const context = document.createElement('p');
@@ -152,13 +183,13 @@
   function renderProjects() {
     const grid = document.getElementById('projectGrid');
     if (!grid || typeof projects === 'undefined') return;
-    projects.forEach((project) => grid.appendChild(createCard(project, 'projects')));
+    projects.forEach((project, i) => grid.appendChild(createCard(project, 'projects', i)));
   }
 
   function renderMiniProjects() {
     const grid = document.getElementById('miniProjectGrid');
     if (!grid || typeof miniProjects === 'undefined') return;
-    miniProjects.forEach((project) => grid.appendChild(createCard(project, 'mini_projects')));
+    miniProjects.forEach((project, i) => grid.appendChild(createCard(project, 'mini_projects', i)));
   }
 
   /* --------------------------------------------------------------------
@@ -259,22 +290,33 @@
     const container = document.getElementById('skillsGroups');
     if (!container || typeof skills === 'undefined') return;
 
-    skills.forEach((group) => {
+    skills.forEach((group, i) => {
       const wrap = document.createElement('div');
-      wrap.className = 'skills-group';
+      wrap.className = 'skills-group reveal';
+      wrap.style.setProperty('--i', String(i % 2));
+
+      const head = document.createElement('div');
+      head.className = 'skills-group-head';
+
+      const index = document.createElement('span');
+      index.className = 'skills-group-index';
+      index.setAttribute('aria-hidden', 'true');
+      index.textContent = String(i + 1).padStart(2, '0');
+      head.appendChild(index);
 
       const heading = document.createElement('h3');
       heading.className = 'skills-group-title';
       heading.textContent = group.category;
-      wrap.appendChild(heading);
+      head.appendChild(heading);
+      wrap.appendChild(head);
 
       const pillRow = document.createElement('div');
       pillRow.className = 'skills-pill-row';
       (group.items || []).forEach((skill) => {
-        const pill = document.createElement('span');
-        pill.className = 'pill';
-        pill.textContent = skill;
-        pillRow.appendChild(pill);
+        const chip = document.createElement('span');
+        chip.className = 'skill-chip';
+        chip.textContent = skill;
+        pillRow.appendChild(chip);
       });
       wrap.appendChild(pillRow);
 
@@ -308,12 +350,14 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     initNavToggle();
+    initNavState();
+    renderHeroStats();
     renderProjects();
     renderMiniProjects();
     renderCertifications();
     initCertCarousel();
     renderSkills();
     initProjectFilters();
-    initCursorTrail();
+    initReveal();
   });
 })();

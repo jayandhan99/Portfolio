@@ -2,8 +2,21 @@
    Loaded in addition to main.css. */
 
 .project-hero {
-  padding: 3rem 0 2rem;
-  border-bottom: 1px solid rgb(255 255 255 / 6%);
+  padding: calc(var(--nav-height) + 4rem) 0 3rem;
+  border-bottom: 1px solid var(--color-line);
+  background:
+    radial-gradient(ellipse 60% 90% at 15% 0%, rgb(56 182 255 / 14%), transparent 70%),
+    radial-gradient(ellipse 50% 80% at 90% 10%, rgb(129 140 248 / 10%), transparent 70%);
+}
+
+.project-hero .section-inner,
+.project-content .section-inner {
+  max-width: 920px;
+}
+
+.project-hero .section-inner {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .back-link {
@@ -21,14 +34,17 @@
 }
 
 .project-title {
-  margin-top: 1.5rem;
-  font-size: clamp(1.75rem, 1.3rem + 2vw, 2.75rem);
+  margin-top: 0;
+  font-size: clamp(2.25rem, 1.2rem + 3.6vw, 3.9rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
 }
 
 .project-context {
-  margin-top: 0.5rem;
-  color: var(--color-muted);
-  font-size: 0.95rem;
+  margin-top: 0.9rem;
+  color: var(--color-soft);
+  font-size: 1.05rem;
 }
 
 .project-tags {
@@ -39,29 +55,50 @@
 }
 
 .project-content {
-  padding: 3rem 0;
+  padding: 2rem 0 3rem;
+}
+
+.project-content .section-inner {
+  padding-top: 3rem;
+  padding-bottom: 4rem;
 }
 
 .project-section {
-  margin-bottom: 3rem;
+  margin-bottom: 4rem;
 }
 
 .project-section h2 {
-  color: var(--color-accent);
-  font-size: 1.4rem;
-  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  color: var(--color-text);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.project-section h2::before {
+  content: '';
+  flex-shrink: 0;
+  width: 4px;
+  height: 1.1em;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--color-accent), var(--color-accent-2));
 }
 
 .project-section h3 {
-  color: var(--color-accent);
-  font-size: 1.1rem;
-  margin: 1.75rem 0 0.75rem;
+  margin: 2.25rem 0 0.9rem;
+  color: var(--color-text);
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .project-section p {
-  color: var(--color-text);
-  line-height: 1.75;
-  margin-bottom: 1rem;
+  color: var(--color-body);
+  font-size: 1.02rem;
+  line-height: 1.8;
+  margin-bottom: 1.1rem;
 }
 
 .project-section ul {
@@ -70,13 +107,18 @@
 }
 
 .project-section li {
-  color: var(--color-text);
-  line-height: 1.7;
+  color: var(--color-body);
+  line-height: 1.75;
   margin-bottom: 0.6rem;
 }
 
-.project-section strong {
+.project-section li::marker {
   color: var(--color-accent);
+}
+
+.project-section strong {
+  color: var(--color-text);
+  font-weight: 600;
 }
 
 .project-section code {
@@ -93,8 +135,9 @@
 
 .project-figure img {
   width: 100%;
-  border-radius: 10px;
-  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 14px;
+  border: 1px solid var(--color-line);
+  box-shadow: 0 24px 60px -30px rgb(0 0 0 / 70%);
 }
 
 .project-figure figcaption {
